@@ -10,6 +10,7 @@
   "decisionModelUrl": "data/decision-model.json",
   "nearbyCitiesUrl": "data/nearby-cities.json",
   "publicUrl": "https://sumitpawar2006.github.io/aerochem-sentinel/",
+  "weatherEndpoint": "https://api.open-meteo.com/v1/forecast",
   "liveAirQuality": {
     "enabled": true,
     "endpoint": "/api/live-aqi",

@@ -17,6 +17,7 @@
     decisionModelUrl: "data/decision-model.json",
     nearbyCitiesUrl: "data/nearby-cities.json",
     publicUrl: "https://sumitpawar2006.github.io/aerochem-sentinel/",
+    weatherEndpoint: "https://api.open-meteo.com/v1/forecast",
     reportEndpoint: "/api/report",
     reportStatusEndpoint: "/api/report/status",
     chatEndpoint: "/api/chat",
@@ -35,7 +36,9 @@
     metadata: { status: "unavailable", label: "Decision model unavailable", sources: [] },
     sensorSiting: { coverageRadiusKm: 3, weights: [], candidates: [] },
     interventions: { defaultIntervention: "traffic", defaultStrength: 60, options: [] },
-    feasibility: { timelineWeeks: 12, costAssumptionsInr: {}, phases: [], communityImpact: [] }
+    feasibility: { timelineWeeks: 12, costAssumptionsInr: {}, phases: [], communityImpact: [] },
+    domainBrief: {},
+    projectBlueprint: { stages: [], modelPlan: {}, evidence: [], team: [] }
   };
 
   const categoryDefinitions = {
@@ -107,10 +110,11 @@
   ];
 
   const presentationSteps = [
-    ["situation", "01 · Detect", "Live satellite context and CAMS modeled AQI establish the current evidence."],
-    ["situation", "02 · Recommend", "A transparent planning score identifies the strongest first monitoring location."],
-    ["trends", "03 · Test an action", "An intervention sandbox compares one pollution-reduction assumption without claiming a forecast."],
-    ["method", "04 · Prove feasibility", "A 12-week pilot, adjustable cost model and community outcomes complete the proposal."]
+    ["situation", "01 · Frame the problem", "The team PDFs focus on HCHO and the monitoring gap, while the dashboard clearly shows that the Sentinel-5P pollutant raster is still pending."],
+    ["situation", "02 · Show live evidence", "Real satellite geography, CAMS modeled AQI and current meteorology establish what is connected today."],
+    ["situation", "03 · Recommend", "A transparent planning score identifies the strongest first monitoring location."],
+    ["trends", "04 · Test an action", "An intervention sandbox compares one pollution-reduction assumption without claiming a forecast."],
+    ["method", "05 · Prove the pathway", "The PDF-derived ML pipeline, evidence gaps, 12-week pilot, cost model and community outcomes complete the proposal."]
   ];
 
   const state = {
@@ -138,6 +142,7 @@
     timelineTimer: null,
     reportContext: null,
     liveAir: null,
+    liveWeather: null,
     mailService: { configured: false, recipient: "" },
     aiService: { configured: false, model: "local evidence mode" },
     chatHistory: [],
@@ -252,6 +257,7 @@
       $("#live-aqi-category").textContent = "Live model temporarily unavailable";
       $("#live-aqi-source").textContent = "Use the clearly labelled demo scenario as fallback.";
       $("#live-feed-status").textContent = "UNAVAILABLE";
+      updateHealthAdvisory(null);
       return false;
     }
   }
@@ -267,7 +273,63 @@
     $("#live-feed-dot").classList.add("ready");
     $("#live-feed-status").textContent = "CAMS / OPEN-METEO";
     $("#live-aqi-scale").textContent = "US AQI · MODEL";
+    updateHealthAdvisory(current.us_aqi);
     updateInterventionSimulation();
+  }
+
+  function updateHealthAdvisory(value) {
+    const band = $("#health-band");
+    const guidance = $("#health-guidance");
+    if (!Number.isFinite(value)) {
+      band.textContent = "UNAVAILABLE";
+      band.style.color = "";
+      guidance.textContent = "Current modeled AQI is unavailable. No activity guidance is inferred.";
+      return;
+    }
+    const category = usAqiCategory(value);
+    const rounded = Math.round(value);
+    let message = "Most people can continue normal outdoor activity.";
+    if (value > 50 && value <= 100) message = "Most people can continue normal activity; unusually sensitive people should monitor symptoms during prolonged exertion.";
+    else if (value <= 150 && value > 100) message = "Sensitive groups should reduce prolonged or heavy outdoor exertion.";
+    else if (value <= 200 && value > 150) message = "Everyone should reduce prolonged outdoor exertion; sensitive groups should avoid it.";
+    else if (value <= 300 && value > 200) message = "Avoid prolonged outdoor exertion and prioritize indoor exposure reduction.";
+    else if (value > 300) message = "Avoid outdoor exertion and follow official local health and emergency guidance.";
+    band.textContent = `${category.name.toUpperCase()} · US AQI ${rounded}`;
+    band.style.color = category.color;
+    guidance.textContent = message;
+  }
+
+  function compassDirection(value) {
+    if (!Number.isFinite(value)) return "—";
+    const points = ["N", "NE", "E", "SE", "S", "SW", "W", "NW"];
+    return points[Math.round(value / 45) % 8];
+  }
+
+  async function loadLiveWeather() {
+    const [latitude, longitude] = state.config.region.center;
+    const params = new URLSearchParams({
+      latitude: String(latitude),
+      longitude: String(longitude),
+      current: "temperature_2m,relative_humidity_2m,wind_speed_10m,wind_direction_10m",
+      timezone: "Asia/Kolkata",
+      forecast_days: "1"
+    });
+    try {
+      const response = await fetch(`${state.config.weatherEndpoint}?${params.toString()}`, { cache: "no-store" });
+      if (!response.ok) throw new Error(`Live weather ${response.status}`);
+      const payload = await response.json();
+      if (!payload.current) throw new Error("Live weather returned no current values");
+      state.liveWeather = payload.current;
+      $("#weather-temperature").textContent = `${payload.current.temperature_2m}°C`;
+      $("#weather-humidity").textContent = `${payload.current.relative_humidity_2m}%`;
+      $("#weather-wind").textContent = `${payload.current.wind_speed_10m} km/h`;
+      $("#weather-direction").textContent = `${compassDirection(payload.current.wind_direction_10m)} ${Math.round(payload.current.wind_direction_10m)}°`;
+      return true;
+    } catch (error) {
+      console.warn("Live weather unavailable", error);
+      ["weather-temperature", "weather-humidity", "weather-wind", "weather-direction"].forEach(id => { $(`#${id}`).textContent = "Unavailable"; });
+      return false;
+    }
   }
 
   function initMap() {
@@ -450,8 +512,39 @@
     }
   }
 
+  function renderDocumentSynthesis() {
+    const domain = state.decisionModel.domainBrief || {};
+    $("#domain-brief-title").textContent = domain.title || "Why the project focuses on HCHO";
+    $("#domain-description").textContent = domain.description || "The team document synthesis is unavailable.";
+    $("#domain-status").textContent = domain.status || "NOT CONNECTED";
+    $("#domain-caution").textContent = domain.satelliteMeaning || "Satellite column values must remain distinct from ground concentration.";
+    $("#chemistry-chain").innerHTML = (domain.chemistry || []).map(item => `<span>${escapeHtml(item)}</span>`).join("");
+
+    const blueprint = state.decisionModel.projectBlueprint || {};
+    $("#blueprint-title").textContent = blueprint.title || "PDF-to-dashboard evidence pipeline";
+    $("#blueprint-description").textContent = blueprint.description || "Project architecture unavailable.";
+    $("#blueprint-stages").innerHTML = (blueprint.stages || []).map(item => {
+      const tone = item.status === "ACTIVE" ? "active" : item.status === "PARTIAL" ? "partial" : "";
+      return `<div class="blueprint-stage"><span>${escapeHtml(item.number)}</span><div><strong>${escapeHtml(item.title)}</strong><small>${escapeHtml(item.summary)}<br>${escapeHtml(item.note)}</small></div><em class="${tone}">${escapeHtml(item.status)}</em></div>`;
+    }).join("");
+    $("#blueprint-evidence").innerHTML = (blueprint.evidence || []).map(item => `<div><span>${escapeHtml(item.label)}</span><strong class="${item.tone === "live" ? "live" : ""}">${escapeHtml(item.status)}</strong></div>`).join("");
+
+    const plan = blueprint.modelPlan || {};
+    $("#model-plan").innerHTML = [
+      ["Features", (plan.features || []).join(", ") || "Not documented"],
+      ["Target + models", `${plan.target || "AQI"} · ${(plan.models || []).join(" + ") || "Not documented"}`],
+      ["Documented split", plan.documentedSplit || "Not documented"],
+      ["Validation required", (plan.requiredMetrics || []).join(", ") || "Not documented"],
+      ["Current status", plan.status || "Unavailable"]
+    ].map(item => `<div><span>${escapeHtml(item[0])}</span><strong>${escapeHtml(item[1])}</strong></div>`).join("");
+    $("#project-team").innerHTML = (blueprint.team || []).map(member => `<div><strong>${escapeHtml(member.name)}</strong><span>${escapeHtml(member.role)}</span></div>`).join("");
+    const synthesis = state.decisionModel.documentSynthesis || {};
+    $("#document-provenance").textContent = `${synthesis.label || "Team documents"} · ${(synthesis.documents || []).join(" · ")}`;
+  }
+
   function renderDecisionUi() {
     const model = state.decisionModel;
+    renderDocumentSynthesis();
     const siting = model.sensorSiting || {};
     const best = recommendedSensorCandidate();
     if (best) {
@@ -990,6 +1083,9 @@
         { label: "Base geography", value: "OpenStreetMap · available" },
         { label: "Observed AQI", value: state.environmental.observed?.aqi ?? "Unavailable" },
         { label: "Predicted AQI", value: state.environmental.predicted?.aqi != null ? `${state.environmental.predicted.aqi} ${state.environmental.predicted.scale || "AQI"} · ${state.environmental.predicted.status === "live_model" ? "LIVE MODEL" : "DEMO"}` : "Unavailable" },
+        { label: "Current meteorology", value: state.liveWeather ? `${state.liveWeather.temperature_2m}°C · ${state.liveWeather.relative_humidity_2m}% RH · ${state.liveWeather.wind_speed_10m} km/h ${compassDirection(state.liveWeather.wind_direction_10m)}` : "Unavailable" },
+        { label: "HCHO / NO₂ satellite workflow", value: "Documented in team PDFs · pollutant raster not connected" },
+        { label: "RF / XGBoost model", value: "Design documented · trained artifact and validation metrics not connected" },
         { label: "Model reliability", value: state.environmental.predicted?.reliability ?? "Unavailable" },
         { label: "Recommended first sensor site", value: bestSensor ? `${bestSensor.name} · planning score ${bestSensor.score}/100` : "Planning model unavailable" },
         { label: "Sensitive sites within planning radius", value: Number.isFinite(state.sensitiveSiteCount) ? `${state.sensitiveSiteCount} mapped OSM sites` : "Live OSM count unavailable" },
@@ -1137,7 +1233,9 @@
       timelinePoint: point ? { date: point.date, aqi: point.aqi, pm2_5: point.pm2_5, pm10: point.pm10 } : null,
       recommendedSensor: bestSensor ? { name: bestSensor.name, score: bestSensor.score, status: "planning heuristic" } : null,
       activeIntervention: activeAction ? { name: activeAction.name, status: "illustrative planning scenario" } : null,
-      evidenceWarning: "CAMS values are modeled estimates; no verified ground sensor is connected."
+      currentWeather: state.liveWeather ? { temperatureC: state.liveWeather.temperature_2m, humidityPct: state.liveWeather.relative_humidity_2m, windKmh: state.liveWeather.wind_speed_10m, windDirectionDeg: state.liveWeather.wind_direction_10m } : null,
+      projectPipeline: state.decisionModel.projectBlueprint?.modelPlan || null,
+      evidenceWarning: "CAMS values are modeled estimates; no verified ground sensor, Sentinel-5P pollutant raster, or trained RF/XGBoost artifact is connected."
     };
   }
 
@@ -1203,6 +1301,8 @@
     if (wantsReport || resemblesAny(tokens, ["download"])) return { name: "report", autoSend: false };
     if (resemblesAny(tokens, ["summary", "summarize", "summarise"])) return { name: "summary", autoSend: false };
     if (resemblesAny(tokens, ["sensor", "monitor", "station", "siting"])) return { name: "sensor", autoSend: false };
+    if (resemblesAny(tokens, ["hcho", "formaldehyde", "chemical", "ozone", "voc"])) return { name: "domain", autoSend: false };
+    if (resemblesAny(tokens, ["pipeline", "random", "forest", "xgboost", "model", "training", "weather"])) return { name: "pipeline", autoSend: false };
     if (resemblesAny(tokens, ["simulation", "intervention", "reduction", "traffic", "industry", "burning"])) return { name: "simulation", autoSend: false };
     if (resemblesAny(tokens, ["cost", "budget", "feasibility", "impact", "pilot"])) return { name: "feasibility", autoSend: false };
     if (resemblesAny(tokens, ["confidence", "accuracy", "reliability"])) return { name: "confidence", autoSend: false };
@@ -1242,6 +1342,12 @@
     } else if (intent.name === "feasibility") {
       setMode("method");
       addAssistantMessage(`The field-pilot plan is open: ${state.decisionModel.feasibility?.timelineWeeks || 12} weeks with an adjustable cost model and explicitly labelled community-impact targets.`);
+    } else if (intent.name === "domain") {
+      setMode("situation");
+      addAssistantMessage("The team documents make HCHO the project differentiator: a Sentinel-5P column-density signal for investigating VOC-related industrial patterns. No live HCHO raster is connected yet, so the dashboard does not claim a measured Malegaon HCHO hotspot.");
+    } else if (intent.name === "pipeline") {
+      setMode("method");
+      addAssistantMessage("The documented pipeline is Sentinel-5P HCHO/NO₂ + meteorology + a verified ground reference → aligned data fusion → Random Forest/XGBoost → MAE, RMSE and R² validation → dashboard. Live meteorology is connected; the satellite exports, merged dataset, trained model and validation metrics are still required.");
     } else if (state.aiService.configured) {
       await askGeneralAi(prompt);
     } else if (intent.name === "confidence") {
@@ -1301,20 +1407,26 @@
 
   function renderPresentation() {
     const step = presentationSteps[state.presentationIndex];
-    $("#presentation-step").textContent = `${String(state.presentationIndex + 1).padStart(2, "0")} / 04`;
+    $("#presentation-step").textContent = `${String(state.presentationIndex + 1).padStart(2, "0")} / ${String(presentationSteps.length).padStart(2, "0")}`;
     $("#presentation-title").textContent = step[1];
     $("#presentation-copy").textContent = step[2];
     setMode(step[0]);
+    if (state.presentationIndex === 0) {
+      $("#situation-panel").scrollTop = $(".domain-brief").offsetTop - 10;
+    }
     if (state.presentationIndex === 1) {
+      $("#situation-panel").scrollTop = 0;
+    }
+    if (state.presentationIndex === 2) {
       showSensorRecommendation();
       $("#situation-panel").scrollTop = $(".sensor-decision").offsetTop - 10;
     }
-    if (state.presentationIndex === 2) {
+    if (state.presentationIndex === 3) {
       updateInterventionSimulation();
       $("#trends-panel").scrollTop = 0;
     }
-    if (state.presentationIndex === 3) {
-      $("#method-panel").scrollTop = $(".feasibility-module").offsetTop - 10;
+    if (state.presentationIndex === 4) {
+      $("#method-panel").scrollTop = $(".blueprint-module").offsetTop - 10;
     }
   }
 
@@ -1461,7 +1573,7 @@
     initMap();
     renderDecisionUi();
     bindEvents();
-    await Promise.all([loadLiveAirQuality(), loadMailServiceStatus(), loadAiServiceStatus()]);
+    await Promise.all([loadLiveAirQuality(), loadLiveWeather(), loadMailServiceStatus(), loadAiServiceStatus()]);
     updateEnvironmentalUi();
     state.reportContext = null;
     await loadCategory("places");

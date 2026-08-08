@@ -11,6 +11,63 @@
       {"label": "CPCB National AQI", "url": "https://cpcb.nic.in/National-Air-Quality-Index/", "use": "Indian monitoring and AQI reference pathway"}
     ]
   },
+  "documentSynthesis": {
+    "label": "Team project documents integrated",
+    "updated": "2026-08-08",
+    "scope": "Malegaon demonstrator with a pan-India scalable architecture",
+    "documents": [
+      "ML & Data Pipeline — Vaishnavi Surve",
+      "Domain Knowledge & Project Overview — Khushi Sarkar",
+      "Complete Project Manual",
+      "Dashboard & Integration — Sumit Pawar",
+      "AeroChem Sentinel — Samarthya 2026"
+    ]
+  },
+  "domainBrief": {
+    "title": "Why the project focuses on HCHO",
+    "description": "The team documents identify formaldehyde (HCHO), a volatile organic compound, as the project's differentiating pollutant for industrial and textile-city investigation.",
+    "satelliteMeaning": "Sentinel-5P HCHO is a tropospheric column-density product. It must not be presented as a ground-level concentration or a confirmed local source without processing and validation.",
+    "chemistry": [
+      "VOC emissions",
+      "Sunlight + NOx chemistry",
+      "Ground-level ozone formation",
+      "Respiratory-risk context"
+    ],
+    "status": "PROJECT HYPOTHESIS — HCHO RASTER NOT CONNECTED"
+  },
+  "projectBlueprint": {
+    "title": "PDF-to-dashboard evidence pipeline",
+    "description": "A faithful implementation of the team's proposed architecture, with every stage labelled by its current evidence status.",
+    "stages": [
+      {"number": "01", "title": "Observe", "summary": "Sentinel-5P HCHO/NO₂, meteorology and reference-station data", "status": "PARTIAL", "note": "Live CAMS and meteorology are connected; Sentinel-5P exports and a verified ground reference file were not supplied."},
+      {"number": "02", "title": "Fuse", "summary": "Align date, location, units, quality flags and missing-data rules", "status": "PLANNED", "note": "The documents provide Pandas examples, but no merged production dataset is included."},
+      {"number": "03", "title": "Model", "summary": "Random Forest and XGBoost surface-AQI regression", "status": "PLANNED", "note": "Features, split and candidate models are documented; no trained artifact or prediction CSV is connected."},
+      {"number": "04", "title": "Validate", "summary": "MAE, RMSE, R², residual checks and confidence evidence", "status": "REQUIRED", "note": "Metrics remain blank until a time-aware and location-aware evaluation is provided."},
+      {"number": "05", "title": "Act", "summary": "Map, health guidance, hotspot reports and monitoring decisions", "status": "ACTIVE", "note": "The dashboard, reports, siting scenario and presentation workflow are operational."}
+    ],
+    "modelPlan": {
+      "features": ["HCHO column", "NO₂ column", "temperature", "humidity", "wind speed", "wind direction"],
+      "target": "AQI",
+      "models": ["Random Forest", "XGBoost"],
+      "documentedSplit": "80% train / 20% test",
+      "requiredMetrics": ["MAE", "RMSE", "R²"],
+      "status": "DESIGN DOCUMENTED — MODEL ARTIFACT NOT CONNECTED"
+    },
+    "evidence": [
+      {"label": "Real satellite basemap", "status": "LIVE", "tone": "live"},
+      {"label": "CAMS modeled AQI", "status": "LIVE MODEL", "tone": "live"},
+      {"label": "Open-Meteo meteorology", "status": "LIVE", "tone": "live"},
+      {"label": "Sentinel-5P HCHO / NO₂ raster", "status": "NOT CONNECTED", "tone": "missing"},
+      {"label": "Verified ground-reference dataset", "status": "NOT CONNECTED", "tone": "missing"},
+      {"label": "RF / XGBoost artifact + metrics", "status": "NOT CONNECTED", "tone": "missing"}
+    ],
+    "team": [
+      {"name": "Khushi Sarkar", "role": "Project lead & domain narrative"},
+      {"name": "Vaishnavi Surve", "role": "ML & data pipeline"},
+      {"name": "Bhushan Barun Mallick", "role": "Geospatial & Sentinel-5P workflow"},
+      {"name": "Sumit Pawar", "role": "Dashboard & integration"}
+    ]
+  },
   "sensorSiting": {
     "title": "Recommended first monitoring site",
     "description": "Prioritizes a practical first sensor location using sensitive-site access, emission-source proximity, field access and the current monitoring gap.",

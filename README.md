@@ -34,11 +34,13 @@ Use `server.py`, not `python -m http.server`: the included server supplies the l
 ## What is included
 
 - Full-screen Leaflet map with real Esri satellite imagery as the default, plus OpenStreetMap streets and OpenTopoMap terrain
-- Live modeled US AQI, PM2.5, PM10, and a 24-hour CAMS model timeline
+- Live modeled US AQI, PM2.5, PM10, a 24-hour CAMS model timeline, and current Open-Meteo temperature, humidity and wind
 - Real OpenStreetMap places, hospitals, education, industry, transport, nearby-city autocomplete, global India search, and Malegaon Taluka boundary
 - Transparent first-sensor recommendation with four candidate sites, a weighted score, a 3 km planning radius, and a live OpenStreetMap sensitive-site count
 - Pollution-reduction sandbox for traffic, industrial housekeeping, and open-burning response assumptions
 - Adjustable 12-week field-pilot plan with year-one cost assumptions and measurable community-impact targets
+- HCHO chemistry brief and a five-stage evidence pipeline synthesized from the team's ML, domain, integration, manual, and Samarthya 2026 PDFs
+- Transparent implementation matrix separating live data from planned Sentinel-5P rasters, ground-reference files, and RF/XGBoost artifacts
 - Four work areas: Situation, Investigate, Trends, and Method
 - Observed-versus-modeled comparison, monitoring coverage state, confidence/validation evidence state
 - Clearly labeled demo hotspots when no local sensor or ground-station dataset is available
@@ -87,6 +89,7 @@ The key is entered in a hidden prompt and encrypted for the current Windows user
 - Real places on the map do not receive invented AQI values.
 - Demo hotspot values are opt-in and visibly marked `MODEL DEMO`.
 - The sensor score is a planning heuristic, intervention reductions are illustrative scenarios, and costs are editable assumptions rather than forecasts or vendor quotes.
+- The team PDFs document the intended HCHO/NO₂ and ML workflow, but do not contain deployable pollutant rasters, a trained model artifact, or validation results; the dashboard labels those items as not connected.
 - Confidence intervals, MAE, RMSE, and R² remain unavailable until validated model artifacts are connected.
 - Satellite basemap imagery is real reference imagery, not a Sentinel-5P pollutant raster.
 - Add production pollutant tile URLs and verified ground-station coordinates through `data/app-config.json` and the data contract in the Method panel.

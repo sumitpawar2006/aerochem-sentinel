@@ -17,7 +17,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="">
-  <link rel="stylesheet" href="v2.css?v=20260808-7">
+  <link rel="stylesheet" href="v2.css?v=20260808-8">
 </head>
 <body>
   <a class="skip-link" href="#map">Skip to map</a>
@@ -119,6 +119,24 @@
           <div class="comparison-side predicted"><span>LIVE MODEL AQI</span><strong id="predicted-aqi">···</strong><small id="predicted-source">CAMS global model · not observed</small></div>
         </div>
         <div class="snapshot-meta"><div><span>MODEL DATE</span><strong id="model-date">Connecting…</strong></div><div><span>DATA STATUS</span><strong id="snapshot-status">LIVE MODEL</strong></div></div>
+        <div class="weather-evidence" aria-label="Live meteorological evidence">
+          <div><span>Temperature</span><strong id="weather-temperature">—</strong></div>
+          <div><span>Humidity</span><strong id="weather-humidity">—</strong></div>
+          <div><span>Wind</span><strong id="weather-wind">—</strong></div>
+          <div><span>Direction</span><strong id="weather-direction">—</strong></div>
+        </div>
+        <section class="health-advisory" aria-labelledby="health-advisory-title">
+          <div><span class="section-label">LIVE MODEL HEALTH CONTEXT</span><strong id="health-band">CONNECTING</strong></div>
+          <h3 id="health-advisory-title">Current activity guidance</h3>
+          <p id="health-guidance">Waiting for the current modeled US AQI value.</p>
+          <small>General risk communication only · modeled AQI, not medical advice or a ground observation</small>
+        </section>
+        <section class="domain-brief" aria-labelledby="domain-brief-title">
+          <div class="domain-brief-head"><div><span class="section-label">PROJECT DIFFERENTIATOR · TEAM DOCUMENTS</span><h3 id="domain-brief-title">Why the project focuses on HCHO</h3></div><span id="domain-status">PLANNED LAYER</span></div>
+          <p id="domain-description">Loading the documented formaldehyde focus…</p>
+          <div class="chemistry-chain" id="chemistry-chain"></div>
+          <p class="domain-caution" id="domain-caution">Sentinel-5P column density remains distinct from ground-level concentration.</p>
+        </section>
         <section class="decision-module sensor-decision" aria-labelledby="sensor-decision-title">
           <div class="decision-module-head"><div><span class="section-label">NEXT BEST ACTION · PLANNING</span><h3 id="sensor-decision-title">Recommended first sensor site</h3></div><strong class="decision-score" id="sensor-score">—</strong></div>
           <p class="decision-description" id="sensor-description">Loading the transparent sensor-siting model…</p>
@@ -182,6 +200,13 @@
           <button type="button" data-step="4"><span>05</span><i>→</i><div><strong>Act</strong><small>Communicate risk and next steps</small></div></button>
         </div>
         <div class="method-explanation" id="method-explanation"><strong>Observe the environmental system</strong><p>Start with dated, quality-filtered inputs. Satellite column values remain distinct from ground-level concentrations.</p></div>
+        <section class="blueprint-module" aria-labelledby="blueprint-title">
+          <div class="blueprint-head"><div><span class="section-label">FIVE PDFs → ONE EVIDENCE PIPELINE</span><h3 id="blueprint-title">PDF-to-dashboard evidence pipeline</h3></div><span>MALEGAON → INDIA</span></div>
+          <p id="blueprint-description">Loading the project architecture and current implementation status…</p>
+          <div class="blueprint-stages" id="blueprint-stages"></div>
+          <div class="blueprint-evidence" id="blueprint-evidence"></div>
+          <details class="calculation-details"><summary>Model design, team and document provenance</summary><div class="model-plan" id="model-plan"></div><div class="project-team" id="project-team"></div><p class="document-provenance" id="document-provenance"></p></details>
+        </section>
         <section class="decision-module feasibility-module" aria-labelledby="feasibility-title">
           <div class="decision-module-head"><div><span class="section-label">FEASIBILITY + COMMUNITY IMPACT</span><h3 id="feasibility-title">12-week field pilot</h3></div><span class="scenario-chip">EDITABLE PLAN</span></div>
           <p class="decision-description" id="feasibility-description">Open-source dashboard plus one calibrated sensor at the recommended site.</p>
@@ -251,7 +276,7 @@
     </aside>
 
     <div class="presentation-bar" id="presentation-bar" hidden>
-      <span id="presentation-step">01 / 04</span><div><strong id="presentation-title">Situation first</strong><p id="presentation-copy">Real geography stays separate from unavailable environmental evidence.</p></div><button id="presentation-prev" type="button">←</button><button id="presentation-next" type="button">Next →</button><button id="presentation-close" type="button" aria-label="Exit presentation mode">×</button>
+      <span id="presentation-step">01 / 05</span><div><strong id="presentation-title">Frame the problem</strong><p id="presentation-copy">HCHO and the monitoring gap lead into the live evidence.</p></div><button id="presentation-prev" type="button">←</button><button id="presentation-next" type="button">Next →</button><button id="presentation-close" type="button" aria-label="Exit presentation mode">×</button>
     </div>
   </main>
 
@@ -263,6 +288,6 @@
   </dialog>
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
-  <script src="v2.js?v=20260808-10"></script>
+  <script src="v2.js?v=20260808-11"></script>
 </body>
 </html>
