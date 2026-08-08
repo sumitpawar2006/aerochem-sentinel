@@ -773,6 +773,39 @@
     messages.scrollTop = messages.scrollHeight;
   }
 
+  function offerGmailDraft(recipient, report) {
+    const body = [
+      report.status,
+      "",
+      report.summary,
+      "",
+      ...report.facts.map(item => `${item.label}: ${item.value}`),
+      "",
+      `Generated: ${formatDate(report.generatedAt)}`,
+      "Data note: modeled and demo values are labelled and are not ground-sensor observations."
+    ].join("\n");
+    const params = new URLSearchParams({
+      view: "cm",
+      fs: "1",
+      to: recipient,
+      su: report.title,
+      body
+    });
+    const message = document.createElement("div");
+    message.className = "assistant-message";
+    message.innerHTML = `<span>✦</span><p>Automatic mail delivery is not configured on this host. Your complete report is ready as a Gmail draft.</p>`;
+    const action = document.createElement("a");
+    action.className = "assistant-action";
+    action.href = `https://mail.google.com/mail/?${params.toString()}`;
+    action.target = "_blank";
+    action.rel = "noopener noreferrer";
+    action.textContent = "Open Gmail draft →";
+    message.querySelector("p").append(document.createElement("br"), action);
+    const messages = $("#assistant-messages");
+    messages.appendChild(message);
+    messages.scrollTop = messages.scrollHeight;
+  }
+
   function openAssistant(showEmail = false) {
     $("#assistant-panel").classList.add("open");
     if (showEmail) $("#email-composer").hidden = false;
@@ -805,8 +838,9 @@
       addAssistantMessage("Enter a valid Gmail recipient address.");
       return;
     }
+    const report = buildReport();
     if (location.hostname.endsWith("github.io")) {
-      addAssistantMessage("The public GitHub Pages site is a static frontend. Secure Gmail delivery is available when this repository is run with server.py and the Gmail environment variables configured.");
+      offerGmailDraft(recipient, report);
       return;
     }
     const button = $("#send-email-report");
@@ -816,9 +850,13 @@
       const response = await fetch(state.config.reportEndpoint, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ recipient, report: buildReport() })
+        body: JSON.stringify({ recipient, report })
       });
       const result = await response.json().catch(() => ({}));
+      if ([404, 501, 503].includes(response.status)) {
+        offerGmailDraft(recipient, report);
+        return;
+      }
       if (!response.ok) throw new Error(result.error || `Mail service ${response.status}`);
       addAssistantMessage(`Report sent successfully to ${result.recipient || recipient}.`);
       $("#email-composer").hidden = true;

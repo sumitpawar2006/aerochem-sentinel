@@ -52,7 +52,7 @@ python server.py
 
 Open the Sentinel Assistant and choose **Email this report**. For safety, the server only sends to `AEROCHEM_REPORT_RECIPIENT`; browser input cannot redirect reports to an arbitrary address. The Gmail password stays on the server and is never exposed to front-end code.
 
-GitHub Pages hosts the static public frontend and loads live modeled AQI directly from Open-Meteo. Secure Gmail sending requires `server.py`, so it is available when the repository is run locally or deployed to a Python-capable host with the environment variables above.
+GitHub Pages hosts the static public frontend and loads live modeled AQI directly from Open-Meteo. Secure automatic Gmail sending requires `server.py`, so it is available when the repository is run locally or deployed to a Python-capable host with the environment variables above. On GitHub Pages or a basic static server, the assistant prepares a complete Gmail draft instead of showing a server error; the user reviews it and presses Send in Gmail.
 
 ## Data truth and integration
 
