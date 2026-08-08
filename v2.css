@@ -15,7 +15,7 @@
   --orange: #e66b32;
   --red: #c93e35;
   --blue: #347faa;
-  --radius: 14px;
+  --radius: 0;
   --shadow: 0 18px 60px rgba(20, 33, 29, .16);
 }
 
@@ -221,6 +221,25 @@ button:focus-visible, input:focus-visible, a:focus-visible { outline: 2px solid 
 .email-composer { margin: 0 10px 10px; padding: 10px; border: 1px solid rgba(15,124,101,.18); border-radius: 9px; background: var(--green-wash); }.email-composer label { display: block; color: var(--green-dark); font-size: 7px; font-weight: 700; }.email-composer input { width: 100%; height: 33px; margin: 5px 0; padding: 0 8px; border: 1px solid var(--line); border-radius: 6px; font-size: 8px; }.email-composer button { width: 100%; padding: 8px; border: 0; border-radius: 6px; background: var(--green-dark); color: white; font-size: 7px; font-weight: 700; cursor: pointer; }.email-composer p { margin: 6px 0 0; color: var(--ink-faint); font-size: 6px; line-height: 1.4; }
 
 .presentation-bar { position: absolute; z-index: 780; left: 50%; bottom: 104px; transform: translateX(-50%); width: min(640px, calc(100% - 32px)); display: grid; grid-template-columns: auto 1fr auto auto auto; align-items: center; gap: 11px; padding: 10px 12px; border: 1px solid rgba(185,215,103,.28); border-radius: 11px; background: rgba(24,33,30,.96); color: white; box-shadow: 0 18px 60px rgba(20,33,29,.3); }.presentation-bar > span { color: var(--lime); font-size: 7px; font-weight: 700; }.presentation-bar div { display: grid; }.presentation-bar strong { font-size: 9px; }.presentation-bar p { margin: 2px 0 0; color: rgba(255,255,255,.6); font-size: 7px; }.presentation-bar button { min-width: 28px; height: 28px; padding: 0 8px; border: 1px solid rgba(255,255,255,.14); border-radius: 6px; background: transparent; color: white; font-size: 7px; cursor: pointer; }
+
+/* Angular interface: panels and controls use straight edges; map/data glyphs stay circular. */
+:where(
+  button, input, kbd, dialog,
+  .skip-link, .leaflet-control-zoom, .leaflet-tooltip.location-tooltip,
+  .map-search, .search-results, .search-result,
+  .situation-card, .truth-badge, .aqi-empty, .aqi-demo, .data-readiness,
+  .base-switcher, .base-preview, .layer-dock, .inspector,
+  .catalogue-filter, .location-item, .loading-row,
+  .compare-hero, .compare-hero span, .mini-chart, .compare-readout,
+  .honesty-note, .model-flow > div, .evidence-list,
+  .location-detail dl, .no-aqi-message, .osm-link,
+  .demo-legend, .toast, .contract-dialog,
+  .comparison-side, .snapshot-meta, .evidence-section, .missing-chip,
+  .model-evidence-mini, .hotspot-verdict, .analysis-switch, .season-readout,
+  .map-timeline, .timeline-state, .assistant-launcher, .assistant-panel,
+  .assistant-ai-status, .assistant-message p, .assistant-action,
+  .email-composer, .presentation-bar
+) { border-radius: 0 !important; }
 
 @media (max-width: 1180px) { .language-button { display: none; } }
 @media (max-width: 900px) {
