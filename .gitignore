@@ -2,5 +2,6 @@ __pycache__/
 *.py[cod]
 .env
 .env.*
+.gmail-config.json
 .DS_Store
 Thumbs.db

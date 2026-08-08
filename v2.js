@@ -122,7 +122,8 @@
     presentationIndex: 0,
     timelineTimer: null,
     reportContext: null,
-    liveAir: null
+    liveAir: null,
+    mailService: { configured: false, recipient: "" }
   };
 
   async function fetchJson(url, fallback) {
@@ -806,6 +807,26 @@
     messages.scrollTop = messages.scrollHeight;
   }
 
+  async function loadMailServiceStatus() {
+    try {
+      const response = await fetch(state.config.reportStatusEndpoint, { cache: "no-store" });
+      if (!response.ok) return;
+      state.mailService = await response.json();
+    } catch {
+      state.mailService = { configured: false, recipient: "" };
+    }
+    const input = $("#report-email");
+    const label = $("#report-email-label");
+    const note = $("#email-service-note");
+    const button = $("#send-email-report");
+    if (state.mailService.configured) {
+      input.hidden = true;
+      label.textContent = `Automatic recipient · ${state.mailService.recipient}`;
+      note.textContent = "Secure automatic delivery is ready. The formatted report and one-page attachment will be sent immediately.";
+      button.textContent = "Send formatted report now";
+    }
+  }
+
   function openAssistant(showEmail = false) {
     $("#assistant-panel").classList.add("open");
     if (showEmail) $("#email-composer").hidden = false;
@@ -833,8 +854,8 @@
   }
 
   async function sendEmailReport() {
-    const recipient = $("#report-email").value.trim();
-    if (!recipient || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(recipient)) {
+    const recipient = state.mailService.configured ? "" : $("#report-email").value.trim();
+    if (!state.mailService.configured && (!recipient || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(recipient))) {
       addAssistantMessage("Enter a valid Gmail recipient address.");
       return;
     }
@@ -864,7 +885,7 @@
       addAssistantMessage(`${error.message}. Start server.py with the Gmail environment variables configured; credentials must never be added to browser code.`);
     } finally {
       button.disabled = false;
-      button.textContent = "Send secure report";
+      button.textContent = state.mailService.configured ? "Send formatted report now" : "Send secure report";
     }
   }
 
@@ -984,7 +1005,7 @@
     state.environmental = await fetchJson(state.config.environmentalDataUrl, fallbackEnvironmentalData);
     initMap();
     bindEvents();
-    await loadLiveAirQuality();
+    await Promise.all([loadLiveAirQuality(), loadMailServiceStatus()]);
     updateEnvironmentalUi();
     state.reportContext = null;
     loadCategory("places");

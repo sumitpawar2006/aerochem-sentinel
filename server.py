@@ -1,6 +1,7 @@
 """AeroChem Sentinel local server with an optional secure Gmail report endpoint.
 
-Required environment variables for email delivery:
+Email delivery can use the encrypted Windows setup created by setup-gmail.ps1,
+or these environment variables:
   AEROCHEM_GMAIL_USER
   AEROCHEM_GMAIL_APP_PASSWORD
   AEROCHEM_REPORT_RECIPIENT
@@ -13,10 +14,12 @@ import json
 import os
 import re
 import smtplib
+import subprocess
 import urllib.error
 import urllib.request
 from urllib.parse import urlparse
 from email.message import EmailMessage
+from email.utils import formataddr
 from http import HTTPStatus
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
@@ -24,16 +27,57 @@ from typing import Any
 
 
 APP_DIR = Path(__file__).resolve().parent
+PRIVATE_MAIL_CONFIG = APP_DIR / ".gmail-config.json"
 EMAIL_RE = re.compile(r"^[^\s@]+@[^\s@]+\.[^\s@]+$")
 MAX_BODY_BYTES = 64 * 1024
 
 
-def _mail_settings() -> tuple[str, str, str]:
-    return (
-        os.environ.get("AEROCHEM_GMAIL_USER", "").strip(),
-        os.environ.get("AEROCHEM_GMAIL_APP_PASSWORD", "").strip(),
-        os.environ.get("AEROCHEM_REPORT_RECIPIENT", "").strip(),
+def _decrypt_windows_secret(encrypted_value: str) -> str:
+    """Decrypt a PowerShell DPAPI secure string for the current Windows user."""
+    if os.name != "nt" or not encrypted_value:
+        return ""
+    environment = os.environ.copy()
+    environment["AEROCHEM_DPAPI_VALUE"] = encrypted_value
+    command = (
+        "$secure = ConvertTo-SecureString -String $env:AEROCHEM_DPAPI_VALUE; "
+        "$pointer = [Runtime.InteropServices.Marshal]::SecureStringToBSTR($secure); "
+        "try { [Runtime.InteropServices.Marshal]::PtrToStringBSTR($pointer) } "
+        "finally { [Runtime.InteropServices.Marshal]::ZeroFreeBSTR($pointer) }"
     )
+    try:
+        completed = subprocess.run(
+            ["powershell.exe", "-NoProfile", "-NonInteractive", "-Command", command],
+            check=True,
+            capture_output=True,
+            text=True,
+            timeout=8,
+            env=environment,
+            creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0),
+        )
+    except (OSError, subprocess.SubprocessError):
+        return ""
+    return completed.stdout.strip()
+
+
+def _private_mail_settings() -> tuple[str, str, str]:
+    if not PRIVATE_MAIL_CONFIG.exists():
+        return "", "", ""
+    try:
+        payload = json.loads(PRIVATE_MAIL_CONFIG.read_text(encoding="utf-8-sig"))
+    except (OSError, json.JSONDecodeError):
+        return "", "", ""
+    user = str(payload.get("gmailUser", "")).strip()
+    recipient = str(payload.get("reportRecipient", user)).strip()
+    password = _decrypt_windows_secret(str(payload.get("appPasswordDpapi", "")).strip())
+    return user, password, recipient
+
+
+def _mail_settings() -> tuple[str, str, str]:
+    private_user, private_password, private_recipient = _private_mail_settings()
+    user = os.environ.get("AEROCHEM_GMAIL_USER", "").strip() or private_user
+    password = os.environ.get("AEROCHEM_GMAIL_APP_PASSWORD", "").strip() or private_password
+    recipient = os.environ.get("AEROCHEM_REPORT_RECIPIENT", "").strip() or private_recipient
+    return user, password, recipient
 
 
 def _masked_email(value: str) -> str:
@@ -145,7 +189,10 @@ class AeroChemHandler(SimpleHTTPRequestHandler):
             return
 
         requested_recipient = str(payload.get("recipient", "")).strip()
-        if not EMAIL_RE.match(requested_recipient) or requested_recipient.lower() != configured_recipient.lower():
+        if requested_recipient and (
+            not EMAIL_RE.match(requested_recipient)
+            or requested_recipient.lower() != configured_recipient.lower()
+        ):
             self._json_response(
                 HTTPStatus.FORBIDDEN,
                 {"ok": False, "error": "Recipient does not match the server-configured report address"},
@@ -161,10 +208,19 @@ class AeroChemHandler(SimpleHTTPRequestHandler):
         report_html = _build_report_html(report)
         message = EmailMessage()
         message["Subject"] = subject
-        message["From"] = user
+        message["From"] = formataddr(("AeroChem Sentinel", user))
         message["To"] = configured_recipient
-        message.set_content(str(report.get("summary", "AeroChem Sentinel report"))[:6000])
+        plain_facts = "\n".join(
+            f"{item.get('label', '')}: {item.get('value', '')}"
+            for item in report.get("facts", [])[:20]
+            if isinstance(item, dict)
+        )
+        message.set_content(
+            f"{subject}\n\n{report.get('summary', 'AeroChem Sentinel report')}\n\n"
+            f"{plain_facts}\n\nGenerated: {report.get('generatedAt', 'Not supplied')}"
+        )
         message.add_alternative(report_html, subtype="html")
+        message.add_attachment(report_html, subtype="html", filename="aerochem-sentinel-report.html")
 
         try:
             with smtplib.SMTP_SSL("smtp.gmail.com", 465, timeout=20) as smtp:

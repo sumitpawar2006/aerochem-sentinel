@@ -39,9 +39,17 @@ Use `server.py`, not `python -m http.server`: the included server supplies the l
 - Sentinel Assistant for evidence summaries, report preparation, downloads, and Gmail delivery
 - Desktop, tablet, and mobile layouts
 
-## Optional Gmail report delivery
+## Automatic Gmail report delivery
 
-Create a Gmail App Password for the sending account, then set these environment variables in the same terminal before starting the server:
+On Windows, create a Google App Password at https://myaccount.google.com/apppasswords and run the one-time setup:
+
+```powershell
+.\setup-gmail.ps1
+```
+
+The script prompts securely for the Gmail address and 16-character App Password, encrypts the credential for the current Windows user, starts the correct Python server on an available local port, and opens the app. The recipient input then disappears and **Send formatted report now** delivers the HTML email and one-page attachment directly to the configured address.
+
+For Linux or a hosted Python deployment, use environment variables instead:
 
 ```powershell
 $env:AEROCHEM_GMAIL_USER='sender@gmail.com'
@@ -50,7 +58,7 @@ $env:AEROCHEM_REPORT_RECIPIENT='recipient@gmail.com'
 python server.py
 ```
 
-Open the Sentinel Assistant and choose **Email this report**. For safety, the server only sends to `AEROCHEM_REPORT_RECIPIENT`; browser input cannot redirect reports to an arbitrary address. The Gmail password stays on the server and is never exposed to front-end code.
+Open the Sentinel Assistant and choose **Email this report**. For safety, the server only sends to the configured recipient; browser input cannot redirect automatic reports to an arbitrary address. The Gmail password stays on the server and is never exposed to front-end code or committed to Git.
 
 GitHub Pages hosts the static public frontend and loads live modeled AQI directly from Open-Meteo. Secure automatic Gmail sending requires `server.py`, so it is available when the repository is run locally or deployed to a Python-capable host with the environment variables above. On GitHub Pages or a basic static server, the assistant prepares a complete Gmail draft instead of showing a server error; the user reviews it and presses Send in Gmail.
 
@@ -69,5 +77,6 @@ GitHub Pages hosts the static public frontend and loads live modeled AQI directl
 - `v2.css` — complete responsive visual system
 - `v2.js` — map, live data, interactions, reports, and assistant
 - `server.py` — static server, live-AQI proxy, and Gmail endpoint
+- `setup-gmail.ps1` — one-time encrypted Windows Gmail setup and launcher
 - `data/app-config.json` — region and integration configuration
 - `data/environmental-snapshot.json` — labeled fallback/demo scenario data

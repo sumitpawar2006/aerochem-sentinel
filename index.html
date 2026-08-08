@@ -10,7 +10,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="">
-  <link rel="stylesheet" href="v2.css?v=20260808-2">
+  <link rel="stylesheet" href="v2.css?v=20260808-3">
 </head>
 <body>
   <a class="skip-link" href="#map">Skip to map</a>
@@ -210,7 +210,7 @@
       </div>
       <div class="assistant-prompts"><button type="button" data-prompt="summary">Summarize situation</button><button type="button" data-prompt="report">Create report</button><button type="button" data-prompt="email">Email report</button></div>
       <form class="assistant-form" id="assistant-form"><label class="sr-only" for="assistant-input">Message Sentinel Assistant</label><input id="assistant-input" placeholder="Ask about the map or request a report"><button type="submit">↑</button></form>
-      <div class="email-composer" id="email-composer" hidden><label for="report-email">Gmail recipient</label><input id="report-email" type="email" placeholder="team@gmail.com"><button id="send-email-report" type="button">Send secure report</button><p>Requires server-side Gmail environment variables. Credentials never enter this page.</p></div>
+      <div class="email-composer" id="email-composer" hidden><label for="report-email" id="report-email-label">Gmail recipient</label><input id="report-email" type="email" placeholder="team@gmail.com"><button id="send-email-report" type="button">Send secure report</button><p id="email-service-note">Requires one-time secure Gmail setup. Credentials never enter this page.</p></div>
     </aside>
 
     <div class="presentation-bar" id="presentation-bar" hidden>
@@ -226,6 +226,6 @@
   </dialog>
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
-  <script src="v2.js?v=20260808-2"></script>
+  <script src="v2.js?v=20260808-3"></script>
 </body>
 </html>
