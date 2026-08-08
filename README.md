@@ -6,7 +6,13 @@ A map-first environmental intelligence experience for Malegaon. It works without
 
 **Source repository:** https://github.com/sumitpawar2006/aerochem-sentinel
 
-## Run locally
+## Share with your team
+
+Send this public link: **https://sumitpawar2006.github.io/aerochem-sentinel/**
+
+It works from any phone or computer and does not require your machine or a localhost server. The in-app **Share** button always sends this public address, including when you are testing locally.
+
+## Optional local development
 
 From this folder, start the included Python server:
 

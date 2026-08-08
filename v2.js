@@ -16,6 +16,7 @@
     environmentalDataUrl: "data/environmental-snapshot.json",
     decisionModelUrl: "data/decision-model.json",
     nearbyCitiesUrl: "data/nearby-cities.json",
+    publicUrl: "https://sumitpawar2006.github.io/aerochem-sentinel/",
     reportEndpoint: "/api/report",
     reportStatusEndpoint: "/api/report/status",
     chatEndpoint: "/api/chat",
@@ -1317,6 +1318,32 @@
     }
   }
 
+  async function sharePublicApp() {
+    const publicUrl = state.config.publicUrl || "https://sumitpawar2006.github.io/aerochem-sentinel/";
+    const button = $("#share-button");
+    try {
+      if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(publicUrl);
+      } else {
+        const helper = document.createElement("textarea");
+        helper.value = publicUrl;
+        helper.setAttribute("readonly", "");
+        helper.style.position = "fixed";
+        helper.style.opacity = "0";
+        document.body.appendChild(helper);
+        helper.select();
+        document.execCommand("copy");
+        helper.remove();
+      }
+      button.innerHTML = "<span>✓</span> Copied";
+      showToast("Public team link copied — it works without localhost.");
+      setTimeout(() => { button.innerHTML = "<span>↗</span> Share"; }, 1800);
+    } catch (error) {
+      console.warn("Could not copy public link", error);
+      showToast(publicUrl, 6500);
+    }
+  }
+
   function bindEvents() {
     $$("[data-base]").forEach(button => button.addEventListener("click", () => switchBase(button.dataset.base)));
     $$("[data-mode]").forEach(button => button.addEventListener("click", () => setMode(button.dataset.mode)));
@@ -1349,6 +1376,7 @@
       $("#mobile-menu").setAttribute("aria-expanded", String(open));
     });
     $("#region-button").addEventListener("click", () => { state.map.flyTo(state.config.region.center, state.config.region.zoom, { duration: .7 }); showToast("Malegaon is the only data-enabled region in this build."); });
+    $("#share-button").addEventListener("click", sharePublicApp);
 
     $("#map-time").addEventListener("input", event => updateTimeline(Number(event.target.value)));
     $("#compare-time").addEventListener("input", event => updateTimeline(Number(event.target.value)));

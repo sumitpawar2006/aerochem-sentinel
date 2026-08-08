@@ -193,8 +193,9 @@ button:focus-visible, input:focus-visible, a:focus-visible { outline: 2px solid 
 
 /* V2 intelligence, presentation and reporting additions */
 .mode-nav button b { font-weight: 600; }
-.language-button, .present-button { height: 32px; padding: 0 9px; border: 1px solid var(--line); border-radius: 7px; background: white; color: var(--ink-soft); font-size: 7px; font-weight: 700; cursor: pointer; }
-.language-button:hover, .present-button:hover { border-color: rgba(15,124,101,.35); color: var(--green-dark); }
+.language-button, .share-button, .present-button { height: 32px; padding: 0 9px; border: 1px solid var(--line); border-radius: 7px; background: white; color: var(--ink-soft); font-size: 7px; font-weight: 700; cursor: pointer; }
+.language-button:hover, .share-button:hover, .present-button:hover { border-color: rgba(15,124,101,.35); color: var(--green-dark); }
+.share-button { border-color: var(--green-dark); color: var(--green-dark); }.share-button span { margin-right: 4px; }
 .present-button { border-color: var(--ink); background: var(--ink); color: white; }.present-button span { margin-right: 4px; font-size: 6px; }
 
 .comparison-block { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 8px; margin: 12px 0 8px; }.comparison-block > i { color: var(--ink-faint); font-style: normal; }
@@ -242,6 +243,7 @@ button:focus-visible, input:focus-visible, a:focus-visible { outline: 2px solid 
 ) { border-radius: 0 !important; }
 
 @media (max-width: 1180px) { .language-button { display: none; } }
+@media (max-width: 1100px) { .share-button { width: 32px; padding: 0; font-size: 0; }.share-button span { margin: 0; font-size: 8px; } }
 @media (max-width: 900px) {
   .present-button { width: 34px; padding: 0; font-size: 0; }.present-button span { margin: 0; font-size: 7px; }
   .map-timeline { left: 10px; right: 10px; bottom: 91px; min-height: 48px; grid-template-columns: auto 1fr; }.timeline-copy, .timeline-state { display: none; }.timeline-track { grid-column: 2; }

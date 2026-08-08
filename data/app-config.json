@@ -9,6 +9,7 @@
   "environmentalDataUrl": "data/environmental-snapshot.json",
   "decisionModelUrl": "data/decision-model.json",
   "nearbyCitiesUrl": "data/nearby-cities.json",
+  "publicUrl": "https://sumitpawar2006.github.io/aerochem-sentinel/",
   "liveAirQuality": {
     "enabled": true,
     "endpoint": "/api/live-aqi",
