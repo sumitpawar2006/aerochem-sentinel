@@ -1,5 +1,5 @@
-const SHELL_CACHE = "aerochem-shell-v2";
-const RUNTIME_CACHE = "aerochem-runtime-v2";
+const SHELL_CACHE = "aerochem-shell-v3";
+const RUNTIME_CACHE = "aerochem-runtime-v3";
 
 const SHELL_ASSETS = [
   "./",
@@ -11,7 +11,11 @@ const SHELL_ASSETS = [
   "./data/app-config.json",
   "./data/decision-model.json",
   "./data/environmental-snapshot.json",
-  "./data/nearby-cities.json"
+  "./data/nearby-cities.json",
+  "./templates/community-interviews.csv",
+  "./templates/validation-observations.csv",
+  "./templates/vendor-quote-comparison.csv",
+  "./templates/site-permission-request.txt"
 ];
 
 const OPTIONAL_LIBRARY_ASSETS = [

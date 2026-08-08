@@ -1,0 +1,44 @@
+AEROCHEM SENTINEL — PILOT SITE PERMISSION REQUEST
+
+Date: ____________________
+To: _____________________
+Organisation / site: ______________________________________________
+
+Subject: Request for a 12-week air-quality validation pilot
+
+Dear Sir / Madam,
+
+We are the student team behind AeroChem Sentinel, an ideathon prototype that combines public atmospheric data, transparent monitoring-site selection and local validation planning.
+
+We request permission to assess and, only after written approval, install one low-cost particulate monitoring unit at the following candidate location:
+
+Site: ______________________________________________________________
+Coordinates: _______________________________________________________
+Proposed dates: ____________________ to _____________________________
+
+The pilot will:
+- record PM2.5, PM10, temperature and humidity for validation;
+- avoid collecting names, images or personal data;
+- follow an agreed power, mounting, safety and maintenance plan;
+- label all results as pilot evidence until calibration and review are complete;
+- remove the equipment at the end of the agreed period unless renewed in writing.
+
+Site contact: ______________________  Phone / email: _________________
+Student lead: ______________________ Phone / email: _________________
+Faculty mentor: ____________________ Phone / email: _________________
+
+Permission decision:
+[ ] Approved as proposed
+[ ] Approved subject to the conditions below
+[ ] Not approved
+
+Conditions / access hours / safety requirements:
+____________________________________________________________________
+____________________________________________________________________
+
+Authorised representative
+Name: ______________________________ Role: __________________________
+Signature: __________________________ Date: __________________________
+
+Student team acknowledgement
+Name: ______________________________ Signature: _____________________

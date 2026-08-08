@@ -21,7 +21,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="">
-  <link rel="stylesheet" href="v2.css?v=20260808-12">
+  <link rel="stylesheet" href="v2.css?v=20260809-13">
 </head>
 <body>
   <a class="skip-link" href="#map">Skip to map</a>
@@ -103,6 +103,7 @@
       <button type="button" data-layer="schools"><i>□</i><span>Education</span><small>OSM</small></button>
       <button type="button" data-layer="industry"><i>⌂</i><span>Industry</span><small>OSM</small></button>
       <button type="button" data-layer="transport"><i>⇄</i><span>Transport</span><small>OSM</small></button>
+      <button class="satellite-data-layer" type="button" data-layer="satellite-no2"><i>◉</i><span>Sentinel-5P NO₂</span><small>NASA · REAL</small></button>
       <button type="button" data-layer="boundary"><i>⬡</i><span>Taluka boundary</span><small>OSM</small></button>
       <button type="button" data-layer="coverage"><i>◌</i><span>Monitoring coverage</span><small>GROUND</small></button>
       <button class="decision-layer" type="button" data-layer="sensor"><i>◇</i><span>Best sensor site</span><small>PLAN</small></button>
@@ -235,6 +236,19 @@
           <div class="pilot-phases" id="pilot-phases"></div>
           <details class="calculation-details"><summary>Cost assumptions and evidence</summary><div class="cost-breakdown" id="cost-breakdown"></div><div class="decision-sources" id="decision-sources"></div></details>
         </section>
+        <section class="submission-readiness" aria-labelledby="submission-readiness-title">
+          <div class="submission-readiness-head"><div><span class="section-label">IDEATHON DELIVERY STATUS</span><h3 id="submission-readiness-title">Submission-ready prototype</h3></div><strong>100%</strong></div>
+          <p>The live experience, decision story, feasibility case and offline fallbacks are complete. Scientific validation remains the clearly defined outcome of the 12-week pilot.</p>
+          <ul class="submission-checks"><li>Public mobile dashboard</li><li>Real dated Sentinel-5P NO₂</li><li>Live CAMS pollutant context</li><li>Sensor-site decision</li><li>Intervention + cost case</li><li>Pitch, reports and backup</li></ul>
+          <div class="pilot-evidence-status"><div><span>PILOT EVIDENCE INTAKE</span><strong id="pilot-evidence-summary">0 / 3 optional evidence packs loaded</strong></div><div class="pilot-evidence-track"><i id="pilot-evidence-bar"></i></div></div>
+          <div class="evidence-intake-grid">
+            <label><span>Community interviews</span><input id="community-evidence-file" type="file" accept=".csv,text/csv"><small id="community-evidence-state">Template ready · no records loaded</small></label>
+            <label><span>Validation observations</span><input id="validation-evidence-file" type="file" accept=".csv,text/csv"><small id="validation-evidence-state">Template ready · no records loaded</small></label>
+            <label><span>Quote or permission proof</span><input id="partner-evidence-file" type="file" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"><small id="partner-evidence-state">Template ready · no document loaded</small></label>
+          </div>
+          <div class="evidence-template-links"><a href="templates/community-interviews.csv" download>Interview CSV</a><a href="templates/validation-observations.csv" download>Validation CSV</a><a href="templates/vendor-quote-comparison.csv" download>Quote matrix</a><a href="templates/site-permission-request.txt" download>Permission letter</a></div>
+          <small class="privacy-note">Files are checked only in this browser session and are never uploaded by the public GitHub Pages build.</small>
+        </section>
       </div>
 
       <div class="location-detail" id="location-detail" hidden>
@@ -287,6 +301,11 @@
     <div class="demo-legend" id="demo-legend" hidden>
       <span>DEMO AQI OVERLAY</span><div><i class="moderate"></i>Moderate</div><div><i class="poor"></i>Poor</div><div><i class="very-poor"></i>Very poor</div>
     </div>
+    <div class="satellite-no2-legend" id="satellite-no2-legend" hidden>
+      <div><span>REAL SATELLITE COLUMN</span><strong>Sentinel-5P / TROPOMI NO₂</strong><small id="satellite-no2-date">Daily layer</small></div>
+      <img src="https://gibs.earthdata.nasa.gov/legends/OMI_Nitrogen_Dioxide_Tropo_Column_H.svg" alt="Nitrogen dioxide tropospheric column colour scale">
+      <small>NASA GIBS · column density, not a ground-level reading</small>
+    </div>
 
     <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
@@ -319,6 +338,7 @@
       <span>PARTICIPANT JUDGE KIT</span>
       <h2>Win the room in 90 seconds.</h2>
       <p>One shareable link, one honest story and prepared answers for the questions judges are most likely to ask.</p>
+      <div class="judge-readiness-badge"><strong>100%</strong><span>IDEATHON SUBMISSION READY<small>Scientific validation is the 12-week pilot outcome.</small></span></div>
     </header>
 
     <div class="judge-dialog-grid">
@@ -332,7 +352,7 @@
         <span>WHAT JUDGES CAN VERIFY</span>
         <h3 id="judge-proof-title">Evidence, decision and delivery</h3>
         <ul>
-          <li><em>LIVE</em><p><strong>Real geography and current context</strong>Esri satellite, OpenStreetMap, CAMS modeled AQI, HCHO and NO₂, plus Open-Meteo weather.</p></li>
+          <li><em>LIVE</em><p><strong>Real geography and atmospheric evidence</strong>Esri imagery, OpenStreetMap, daily Sentinel-5P NO₂, CAMS modeled AQI/HCHO/NO₂ and weather.</p></li>
           <li><em>DECIDE</em><p><strong>A transparent first action</strong>Sensor-siting score, candidate comparison and pollution-reduction sandbox.</p></li>
           <li><em>PILOT</em><p><strong>A feasible validation path</strong>One calibrated sensor, 12 weeks, editable ₹1.86 lakh planning budget.</p></li>
           <li><em>HONEST</em><p><strong>No invented proof</strong>HCHO raster, ground observations and ML metrics remain visibly marked as not connected.</p></li>
@@ -347,6 +367,7 @@
         <a href="downloads/AeroChem_Sentinel_Ideathon_Pitch_2026.pptx" download><em>01</em><span><strong>Six-slide pitch deck</strong><small>Editable PowerPoint with presenter notes · PPTX</small></span></a>
         <a href="downloads/AeroChem_Sentinel_Field_Validation_Pack.docx" download><em>02</em><span><strong>Field + judge pack</strong><small>Interviews, BOM, validation, roles and Q&amp;A · DOCX</small></span></a>
         <a href="downloads/AeroChem_Sentinel_90s_Backup_Demo.mp4" download><em>03</em><span><strong>90-second backup demo</strong><small>Offline copy of the checked six-slide evidence path · MP4</small></span></a>
+        <a href="downloads/AeroChem_Pilot_Evidence_Starter_Kit.zip" download><em>04</em><span><strong>Pilot evidence starter kit</strong><small>Interview, validation, quotation and permission templates · ZIP</small></span></a>
       </div>
     </section>
 
@@ -372,6 +393,6 @@
   </dialog>
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
-  <script src="v2.js?v=20260808-14"></script>
+  <script src="v2.js?v=20260809-15"></script>
 </body>
 </html>

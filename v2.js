@@ -4,6 +4,8 @@
   const $ = (selector, root = document) => root.querySelector(selector);
   const $$ = (selector, root = document) => Array.from(root.querySelectorAll(selector));
   const svgNS = "http://www.w3.org/2000/svg";
+  const sentinelNo2Wms = "https://gibs.earthdata.nasa.gov/wms/epsg3857/best/wms.cgi";
+  const sentinelNo2LayerId = "TROPOMI_L2_Nitrogen_Dioxide_Tropospheric_Column";
 
   const fallbackConfig = {
     region: {
@@ -111,7 +113,7 @@
 
   const presentationSteps = [
     ["situation", "01 · Define the gap", "Malegaon needs local evidence. We show the live model honestly and never present it as a ground observation."],
-    ["situation", "02 · Show what works", "Real satellite geography, current CAMS modeled AQI and live weather establish the evidence available today."],
+    ["situation", "02 · Show what works", "A real dated Sentinel-5P NO₂ column layer, current CAMS modeled AQI/HCHO/NO₂ and live weather establish the evidence available today."],
     ["situation", "03 · Make a decision", "A transparent planning score recommends the strongest first monitoring location—and labels it as a scenario."],
     ["trends", "04 · Test one action", "The sandbox compares a pollution-reduction assumption without pretending that it is a causal forecast."],
     ["method", "05 · Prove feasibility", "One sensor, a 12-week pilot and an editable ₹1.86 lakh planning budget create a credible path from prototype to validation."]
@@ -131,6 +133,8 @@
     coverageLayer: null,
     sensorLayer: null,
     simulationLayer: null,
+    satelliteNo2Layer: null,
+    satelliteNo2Date: null,
     demoLayer: null,
     demoEnabled: false,
     searchMarker: null,
@@ -148,7 +152,8 @@
     chatHistory: [],
     nearbyCities: [],
     activeIntervention: "traffic",
-    sensitiveSiteCount: null
+    sensitiveSiteCount: null,
+    pilotEvidence: { community: false, validation: false, partner: false }
   };
 
   async function fetchJson(url, fallback) {
@@ -377,6 +382,56 @@
     const label = name === "satellite" ? "Real satellite imagery basemap · Esri (not a pollutant layer)" : name === "terrain" ? "Terrain · OpenTopoMap" : "Streets and mapped places · OpenStreetMap";
     $("#visible-layer-status").textContent = label;
     showToast(label);
+  }
+
+  function latestCompleteSatelliteDate() {
+    const date = new Date();
+    date.setDate(date.getDate() - 1);
+    return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+  }
+
+  function updateSatelliteNo2Date(dateValue) {
+    const latestComplete = latestCompleteSatelliteDate();
+    const candidate = /^\d{4}-\d{2}-\d{2}$/.test(String(dateValue || "")) ? String(dateValue) : latestComplete;
+    const date = candidate < latestComplete ? candidate : latestComplete;
+    state.satelliteNo2Date = date;
+    if (state.satelliteNo2Layer) state.satelliteNo2Layer.setParams({ time: date }, false);
+    const label = $("#satellite-no2-date");
+    if (label) label.textContent = `${date} · daily tropospheric column`;
+  }
+
+  function setSatelliteNo2Visible(visible, button = $('[data-layer="satellite-no2"]')) {
+    if (!state.map || !window.L) return;
+    if (visible) {
+      if (!state.satelliteNo2Layer) {
+        state.satelliteNo2Layer = L.tileLayer.wms(sentinelNo2Wms, {
+          layers: sentinelNo2LayerId,
+          format: "image/png",
+          transparent: true,
+          version: "1.3.0",
+          opacity: .72,
+          attribution: "Sentinel-5P/TROPOMI NO₂ · NASA GIBS / GES DISC"
+        });
+        state.satelliteNo2Layer.setZIndex(340);
+      }
+      const timelinePoint = state.environmental.timeline?.[Number($("#map-time")?.value)];
+      updateSatelliteNo2Date(timelinePoint?.date?.slice(0, 10) || latestCompleteSatelliteDate());
+      if (!state.map.hasLayer(state.satelliteNo2Layer)) state.satelliteNo2Layer.addTo(state.map);
+      button?.classList.add("active");
+      $("#satellite-no2-legend").hidden = false;
+      $("#visible-layer-status").textContent = `Sentinel-5P TROPOMI NO₂ column · ${state.satelliteNo2Date} · NASA GIBS`;
+      showToast("Real daily Sentinel-5P NO₂ column enabled. It is atmospheric column density—not a ground sensor reading.", 5400);
+    } else {
+      if (state.satelliteNo2Layer && state.map.hasLayer(state.satelliteNo2Layer)) state.map.removeLayer(state.satelliteNo2Layer);
+      button?.classList.remove("active");
+      $("#satellite-no2-legend").hidden = true;
+      $("#visible-layer-status").textContent = "Real satellite imagery · Esri / Maxar / Earthstar";
+      showToast("Sentinel-5P NO₂ column hidden.");
+    }
+  }
+
+  function toggleSatelliteNo2(button) {
+    setSatelliteNo2Visible(!(state.satelliteNo2Layer && state.map.hasLayer(state.satelliteNo2Layer)), button);
   }
 
   function formatInr(value) {
@@ -1022,6 +1077,10 @@
       $("#live-aqi-category").style.color = category.color;
       $("#live-aqi-source").textContent = `PM₂.₅ ${point.pm2_5} µg/m³ · PM₁₀ ${point.pm10} µg/m³`;
     }
+    if (state.satelliteNo2Layer && state.map?.hasLayer(state.satelliteNo2Layer)) {
+      updateSatelliteNo2Date(point.date?.slice(0, 10));
+      $("#visible-layer-status").textContent = `Sentinel-5P TROPOMI NO₂ column · ${state.satelliteNo2Date} · NASA GIBS`;
+    }
   }
 
   function updateSeason(key) {
@@ -1078,7 +1137,7 @@
     const intervention = state.decisionModel.interventions?.options?.find(item => item.id === state.activeIntervention);
     return {
       title: "AeroChem Sentinel — Malegaon Situation Report",
-      summary: state.liveAir ? "The real geospatial basemap and a current CAMS global air-quality model feed are online, including near-surface formaldehyde and nitrogen dioxide context. This is modeled atmospheric data, not a ground-sensor observation or Sentinel-5P column product; reliability and satellite pollutant rasters remain unavailable." : "The real geospatial basemap is online. The live air-quality model is unavailable; demonstration outputs remain separately labelled.",
+      summary: state.liveAir ? "The real geospatial basemap, a dated Sentinel-5P TROPOMI NO₂ column and a current CAMS global air-quality model feed are online. CAMS formaldehyde and nitrogen dioxide remain modeled near-surface context—not ground-sensor observations or Sentinel-5P column values; the HCHO satellite raster and local validation evidence remain unavailable." : "The real geospatial basemap and dated Sentinel-5P NO₂ layer are online. The live air-quality model is unavailable; demonstration outputs remain separately labelled.",
       generatedAt,
       status: "MIXED DATA AVAILABILITY",
       facts: [
@@ -1086,9 +1145,10 @@
         { label: "Base geography", value: "OpenStreetMap · available" },
         { label: "Observed AQI", value: state.environmental.observed?.aqi ?? "Unavailable" },
         { label: "Predicted AQI", value: state.environmental.predicted?.aqi != null ? `${state.environmental.predicted.aqi} ${state.environmental.predicted.scale || "AQI"} · ${state.environmental.predicted.status === "live_model" ? "LIVE MODEL" : "DEMO"}` : "Unavailable" },
+        { label: "Sentinel-5P NO₂ column", value: `NASA GIBS / TROPOMI · ${state.satelliteNo2Date || latestCompleteSatelliteDate()} · daily atmospheric column product` },
         { label: "Modeled HCHO / NO₂", value: state.liveAir ? `${state.liveAir.current.formaldehyde ?? "—"} / ${state.liveAir.current.nitrogen_dioxide ?? "—"} µg/m³ · CAMS near-surface model` : "Unavailable" },
         { label: "Current meteorology", value: state.liveWeather ? `${state.liveWeather.temperature_2m}°C · ${state.liveWeather.relative_humidity_2m}% RH · ${state.liveWeather.wind_speed_10m} km/h ${compassDirection(state.liveWeather.wind_direction_10m)}` : "Unavailable" },
-        { label: "HCHO / NO₂ satellite workflow", value: "Documented in team PDFs · pollutant raster not connected" },
+        { label: "Satellite pollutant workflow", value: "NO₂ column connected via NASA GIBS · HCHO raster not connected" },
         { label: "RF / XGBoost model", value: "Design documented · trained artifact and validation metrics not connected" },
         { label: "Model reliability", value: state.environmental.predicted?.reliability ?? "Unavailable" },
         { label: "Recommended first sensor site", value: bestSensor ? `${bestSensor.name} · planning score ${bestSensor.score}/100` : "Planning model unavailable" },
@@ -1233,6 +1293,7 @@
       liveModelAqi: state.liveAir?.current?.us_aqi ?? null,
       liveModelHchoUgM3: state.liveAir?.current?.formaldehyde ?? null,
       liveModelNo2UgM3: state.liveAir?.current?.nitrogen_dioxide ?? null,
+      sentinelNo2Column: { source: "NASA GIBS / Sentinel-5P TROPOMI", date: state.satelliteNo2Date || latestCompleteSatelliteDate(), visible: Boolean(state.satelliteNo2Layer && state.map?.hasLayer(state.satelliteNo2Layer)), meaning: "daily tropospheric column, not ground-level concentration" },
       liveModelTime: state.liveAir?.current?.time ?? null,
       selectedLocation: state.selectedLocation ? { name: state.selectedLocation.name, type: state.selectedLocation.type, lat: state.selectedLocation.lat, lng: state.selectedLocation.lng } : null,
       selectedHotspot: state.selectedHotspot ? { name: state.selectedHotspot.name, status: "demo" } : null,
@@ -1241,7 +1302,7 @@
       activeIntervention: activeAction ? { name: activeAction.name, status: "illustrative planning scenario" } : null,
       currentWeather: state.liveWeather ? { temperatureC: state.liveWeather.temperature_2m, humidityPct: state.liveWeather.relative_humidity_2m, windKmh: state.liveWeather.wind_speed_10m, windDirectionDeg: state.liveWeather.wind_direction_10m } : null,
       projectPipeline: state.decisionModel.projectBlueprint?.modelPlan || null,
-      evidenceWarning: "CAMS values are modeled estimates; no verified ground sensor, Sentinel-5P pollutant raster, or trained RF/XGBoost artifact is connected."
+      evidenceWarning: "A dated Sentinel-5P TROPOMI NO₂ column layer is connected through NASA GIBS. CAMS values remain modeled near-surface estimates; no verified ground sensor, HCHO satellite raster, or trained RF/XGBoost artifact is connected."
     };
   }
 
@@ -1353,7 +1414,7 @@
       addAssistantMessage("The team documents make HCHO the project differentiator: a Sentinel-5P column-density signal for investigating VOC-related industrial patterns. No live HCHO raster is connected yet, so the dashboard does not claim a measured Malegaon HCHO hotspot.");
     } else if (intent.name === "pipeline") {
       setMode("method");
-      addAssistantMessage("The documented pipeline is Sentinel-5P HCHO/NO₂ + meteorology + a verified ground reference → aligned data fusion → Random Forest/XGBoost → MAE, RMSE and R² validation → dashboard. Live meteorology is connected; the satellite exports, merged dataset, trained model and validation metrics are still required.");
+      addAssistantMessage("The documented pipeline is Sentinel-5P HCHO/NO₂ + meteorology + a verified ground reference → aligned data fusion → Random Forest/XGBoost → MAE, RMSE and R² validation → dashboard. A real dated Sentinel-5P NO₂ column and live meteorology are connected; the HCHO raster, ground dataset, trained model and validation metrics remain pilot work.");
     } else if (state.aiService.configured) {
       await askGeneralAi(prompt);
     } else if (intent.name === "confidence") {
@@ -1424,6 +1485,7 @@
     }
     if (state.presentationIndex === 1) {
       $("#situation-panel").scrollTop = 0;
+      setSatelliteNo2Visible(true);
     }
     if (state.presentationIndex === 2) {
       showSensorRecommendation();
@@ -1492,6 +1554,51 @@
     }
   }
 
+  function csvRecordCount(text) {
+    return String(text || "").split(/\r?\n/).slice(1).filter(row => row.trim() && row.split(",").some(value => value.trim())).length;
+  }
+
+  function updatePilotEvidenceStatus() {
+    const complete = Object.values(state.pilotEvidence).filter(Boolean).length;
+    $("#pilot-evidence-summary").textContent = `${complete} / 3 optional evidence packs complete`;
+    $("#pilot-evidence-bar").style.width = `${(complete / 3) * 100}%`;
+  }
+
+  async function inspectCsvEvidence(input, kind) {
+    const file = input.files?.[0];
+    const status = kind === "community" ? $("#community-evidence-state") : $("#validation-evidence-state");
+    if (!file) {
+      state.pilotEvidence[kind] = false;
+      status.textContent = "Template ready · no records loaded";
+      updatePilotEvidenceStatus();
+      return;
+    }
+    try {
+      const text = await file.text();
+      const header = text.split(/\r?\n/, 1)[0].toLowerCase();
+      const expected = kind === "community" ? ["interview_id", "anonymous_consent"] : ["timestamp_ist", "reference_pm25_ugm3"];
+      if (!expected.every(name => header.includes(name))) throw new Error("Template columns do not match");
+      const count = csvRecordCount(text);
+      const target = kind === "community" ? 5 : 10;
+      state.pilotEvidence[kind] = count >= target;
+      status.textContent = `${count} record${count === 1 ? "" : "s"} checked · ${count >= target ? "evidence pack complete" : `${target - count} more needed`}`;
+      showToast(`${kind === "community" ? "Community" : "Validation"} evidence checked locally: ${count} records.`, 4200);
+    } catch (error) {
+      state.pilotEvidence[kind] = false;
+      status.textContent = "Could not verify this file · use the supplied CSV template";
+      showToast("Evidence file columns do not match the supplied template.", 4600);
+    }
+    updatePilotEvidenceStatus();
+  }
+
+  function inspectPartnerEvidence(input) {
+    const file = input.files?.[0];
+    state.pilotEvidence.partner = Boolean(file);
+    $("#partner-evidence-state").textContent = file ? `${file.name} · document selected` : "Template ready · no document loaded";
+    updatePilotEvidenceStatus();
+    if (file) showToast("Partner evidence selected locally. It has not been uploaded.", 4200);
+  }
+
   function bindEvents() {
     $$("[data-base]").forEach(button => button.addEventListener("click", () => switchBase(button.dataset.base)));
     $$("[data-mode]").forEach(button => button.addEventListener("click", () => setMode(button.dataset.mode)));
@@ -1499,6 +1606,7 @@
     $$("[data-layer]").forEach(button => button.addEventListener("click", () => {
       const layer = button.dataset.layer;
       if (categoryDefinitions[layer]) { setMode("investigate"); loadCategory(layer, { fit: true }); }
+      else if (layer === "satellite-no2") toggleSatelliteNo2(button);
       else if (layer === "boundary") toggleBoundary(button);
       else if (layer === "coverage") toggleCoverage(button);
       else if (layer === "sensor") toggleSensorLayer(button);
@@ -1574,6 +1682,9 @@
     $("#intervention-strength").addEventListener("input", updateInterventionSimulation);
     $("#show-simulation-map").addEventListener("click", showSimulationArea);
     $("#pilot-sensor-count").addEventListener("input", updateFeasibility);
+    $("#community-evidence-file").addEventListener("change", event => inspectCsvEvidence(event.target, "community"));
+    $("#validation-evidence-file").addEventListener("change", event => inspectCsvEvidence(event.target, "validation"));
+    $("#partner-evidence-file").addEventListener("change", event => inspectPartnerEvidence(event.target));
     $("#show-sensor-site").addEventListener("click", () => showSensorRecommendation());
     $("#compare-sensor-sites").addEventListener("click", () => {
       const list = $("#sensor-candidates");

@@ -7,6 +7,7 @@
     "sources": [
       {"label": "OpenStreetMap", "url": "https://www.openstreetmap.org/copyright", "use": "Mapped roads, places and sensitive-site context"},
       {"label": "Open-Meteo / CAMS", "url": "https://open-meteo.com/en/docs/air-quality-api", "use": "Current modeled atmospheric conditions"},
+      {"label": "NASA GIBS / Sentinel-5P TROPOMI", "url": "https://gibs.earthdata.nasa.gov/", "use": "Real dated daily tropospheric NO₂ column imagery"},
       {"label": "WHO Air Quality Guidelines", "url": "https://www.who.int/news-room/questions-and-answers/item/who-global-air-quality-guidelines", "use": "Health-oriented pollutant context"},
       {"label": "CPCB National AQI", "url": "https://cpcb.nic.in/National-Air-Quality-Index/", "use": "Indian monitoring and AQI reference pathway"}
     ]
@@ -39,7 +40,7 @@
     "title": "PDF-to-dashboard evidence pipeline",
     "description": "A faithful implementation of the team's proposed architecture, with every stage labelled by its current evidence status.",
     "stages": [
-      {"number": "01", "title": "Observe", "summary": "Sentinel-5P HCHO/NO₂, meteorology and reference-station data", "status": "PARTIAL", "note": "Live CAMS and meteorology are connected; Sentinel-5P exports and a verified ground reference file were not supplied."},
+      {"number": "01", "title": "Observe", "summary": "Sentinel-5P HCHO/NO₂, meteorology and reference-station data", "status": "PARTIAL", "note": "A real dated Sentinel-5P TROPOMI NO₂ column, live CAMS and meteorology are connected; the HCHO raster and verified ground reference remain pilot inputs."},
       {"number": "02", "title": "Fuse", "summary": "Align date, location, units, quality flags and missing-data rules", "status": "PLANNED", "note": "The documents provide Pandas examples, but no merged production dataset is included."},
       {"number": "03", "title": "Model", "summary": "Random Forest and XGBoost surface-AQI regression", "status": "PLANNED", "note": "Features, split and candidate models are documented; no trained artifact or prediction CSV is connected."},
       {"number": "04", "title": "Validate", "summary": "MAE, RMSE, R², residual checks and confidence evidence", "status": "REQUIRED", "note": "Metrics remain blank until a time-aware and location-aware evaluation is provided."},
@@ -57,7 +58,8 @@
       {"label": "Real satellite basemap", "status": "LIVE", "tone": "live"},
       {"label": "CAMS modeled AQI", "status": "LIVE MODEL", "tone": "live"},
       {"label": "Open-Meteo meteorology", "status": "LIVE", "tone": "live"},
-      {"label": "Sentinel-5P HCHO / NO₂ raster", "status": "NOT CONNECTED", "tone": "missing"},
+      {"label": "Sentinel-5P TROPOMI NO₂ column", "status": "LIVE · DAILY", "tone": "live"},
+      {"label": "Sentinel-5P HCHO raster", "status": "NOT CONNECTED", "tone": "missing"},
       {"label": "Verified ground-reference dataset", "status": "NOT CONNECTED", "tone": "missing"},
       {"label": "RF / XGBoost artifact + metrics", "status": "NOT CONNECTED", "tone": "missing"}
     ],

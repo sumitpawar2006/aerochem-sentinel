@@ -34,13 +34,14 @@ Use `server.py`, not `python -m http.server`: the included server supplies the l
 ## What is included
 
 - Full-screen Leaflet map with real Esri satellite imagery as the default, plus OpenStreetMap streets and OpenTopoMap terrain
+- Real, dated daily Sentinel-5P/TROPOMI tropospheric NO2 column imagery loaded from the official NASA GIBS WMS, with the date and column-vs-ground distinction shown on the map
 - Live modeled US AQI, PM2.5, PM10, near-surface HCHO and NO2, a 24-hour CAMS model timeline, and current Open-Meteo temperature, humidity and wind
 - Real OpenStreetMap places, hospitals, education, industry, transport, nearby-city autocomplete, global India search, and Malegaon Taluka boundary
 - Transparent first-sensor recommendation with four candidate sites, a weighted score, a 3 km planning radius, and a live OpenStreetMap sensitive-site count
 - Pollution-reduction sandbox for traffic, industrial housekeeping, and open-burning response assumptions
 - Adjustable 12-week field-pilot plan with year-one cost assumptions and measurable community-impact targets
 - HCHO chemistry brief and a five-stage evidence pipeline synthesized from the team's ML, domain, integration, manual, and Samarthya 2026 PDFs
-- Transparent implementation matrix separating live data from planned Sentinel-5P rasters, ground-reference files, and RF/XGBoost artifacts
+- Transparent implementation matrix separating the connected Sentinel-5P NO2 layer and CAMS context from planned HCHO rasters, ground-reference files, and RF/XGBoost artifacts
 - Four work areas: Situation, Investigate, Trends, and Method
 - Observed-versus-modeled comparison, monitoring coverage state, confidence/validation evidence state
 - Clearly labeled demo hotspots when no local sensor or ground-station dataset is available
@@ -49,7 +50,8 @@ Use `server.py`, not `python -m http.server`: the included server supplies the l
 - English/Marathi navigation support and an integrated presentation mode
 - Project-evidence assistant on the public site, with optional server-powered general AI and Gmail delivery
 - Mobile-first map view with four thumb-friendly workspace tabs, a compact live-AQI card, and full-height evidence sheets
-- Participant Judge Kit with a public-link QR code, 90-second run of show, difficult-question answers, downloadable six-slide deck, printable field/validation pack, and 90-second offline MP4
+- Participant Judge Kit with a public-link QR code, 90-second run of show, difficult-question answers, downloadable six-slide deck, printable field/validation pack, 90-second offline MP4, and pilot-evidence starter kit
+- A clearly scoped 100% ideathon-submission-readiness panel: the public prototype and judging assets are complete, while field evidence remains an honest 12-week pilot outcome
 - Installable web-app manifest and cached local shell for a safer repeat demo after the first online visit
 - Desktop and tablet layouts
 
@@ -94,8 +96,9 @@ The key is entered in a hidden prompt and encrypted for the current Windows user
 - The sensor score is a planning heuristic, intervention reductions are illustrative scenarios, and costs are editable assumptions rather than forecasts or vendor quotes.
 - The team PDFs document the intended HCHO/NO₂ and ML workflow, but do not contain deployable pollutant rasters, a trained model artifact, or validation results; the dashboard labels those items as not connected.
 - Confidence intervals, MAE, RMSE, and R² remain unavailable until validated model artifacts are connected.
-- Satellite basemap imagery is real reference imagery, not a Sentinel-5P pollutant raster.
-- Add production pollutant tile URLs and verified ground-station coordinates through `data/app-config.json` and the data contract in the Method panel.
+- The connected Sentinel-5P/TROPOMI layer is a real atmospheric NO2 column product from NASA GIBS; it is not a ground-level concentration or sensor reading.
+- A deployable HCHO raster, trained model artifact, and field-validation metrics are still not connected; the dashboard labels those gaps explicitly.
+- Add verified ground-station coordinates and future HCHO/model products through `data/app-config.json` and the data contract in the Method panel.
 
 ## Files
 
@@ -110,3 +113,5 @@ The key is entered in a hidden prompt and encrypted for the current Windows user
 - `data/decision-model.json` — sensor siting, intervention, cost, and community-impact assumptions
 - `data/nearby-cities.json` — real OpenStreetMap city/town autocomplete catalogue
 - `data/environmental-snapshot.json` — labeled fallback/demo scenario data
+- `templates/` — blank interview, validation, quote-comparison, and site-permission evidence templates
+- `downloads/AeroChem_Pilot_Evidence_Starter_Kit.zip` — downloadable bundle of the four pilot-evidence templates
