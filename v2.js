@@ -14,8 +14,11 @@
       osmBoundaryRelation: 10345577
     },
     environmentalDataUrl: "data/environmental-snapshot.json",
+    nearbyCitiesUrl: "data/nearby-cities.json",
     reportEndpoint: "/api/report",
-    reportStatusEndpoint: "/api/report/status"
+    reportStatusEndpoint: "/api/report/status",
+    chatEndpoint: "/api/chat",
+    chatStatusEndpoint: "/api/chat/status"
   };
 
   const fallbackEnvironmentalData = {
@@ -74,13 +77,13 @@
   const translations = {
     en: {
       navSituation: "Situation", navInvestigate: "Investigate", navTrends: "Trends", navMethod: "Method",
-      searchPlaceholder: "Search a neighbourhood, road or place in Malegaon",
+      searchPlaceholder: "Search nearby cities, roads or places",
       demoButton: "Run demo scenario",
       mapOnline: "MAP ONLINE"
     },
     mr: {
       navSituation: "स्थिती", navInvestigate: "तपासा", navTrends: "कल", navMethod: "पद्धत",
-      searchPlaceholder: "मालेगावमधील परिसर, रस्ता किंवा ठिकाण शोधा",
+      searchPlaceholder: "जवळची शहरे, रस्ते किंवा ठिकाणे शोधा",
       demoButton: "डेमो परिस्थिती चालवा",
       mapOnline: "नकाशा ऑनलाइन"
     }
@@ -123,7 +126,10 @@
     timelineTimer: null,
     reportContext: null,
     liveAir: null,
-    mailService: { configured: false, recipient: "" }
+    mailService: { configured: false, recipient: "" },
+    aiService: { configured: false, model: "local evidence mode" },
+    chatHistory: [],
+    nearbyCities: []
   };
 
   async function fetchJson(url, fallback) {
@@ -274,7 +280,8 @@
       attribution: "Map data © OpenStreetMap contributors · SRTM · OpenTopoMap"
     });
     state.baseLayers = { streets, satellite: L.layerGroup([satelliteImagery, satelliteLabels]), terrain };
-    state.currentBase = streets.addTo(state.map);
+    state.currentBase = state.baseLayers.satellite.addTo(state.map);
+    $("#visible-layer-status").textContent = "Real satellite imagery · Esri / Maxar / Earthstar";
 
     state.map.on("mousemove", event => {
       $("#cursor-coordinates").textContent = `${formatCoordinate(event.latlng.lat, "N", "S")} · ${formatCoordinate(event.latlng.lng, "E", "W")}`;
@@ -552,18 +559,63 @@
     $("#inspector").classList.add("open");
   }
 
+  function distanceKm(lat1, lng1, lat2, lng2) {
+    const toRadians = value => value * Math.PI / 180;
+    const dLat = toRadians(lat2 - lat1);
+    const dLng = toRadians(lng2 - lng1);
+    const a = Math.sin(dLat / 2) ** 2 + Math.cos(toRadians(lat1)) * Math.cos(toRadians(lat2)) * Math.sin(dLng / 2) ** 2;
+    return 6371 * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  }
+
+  function suggestNearbyCities(query) {
+    const results = $("#search-results");
+    const value = query.trim().toLocaleLowerCase(state.language === "mr" ? "mr-IN" : "en-IN");
+    if (!value) { results.classList.remove("open"); return; }
+    const [centerLat, centerLng] = state.config.region.center;
+    const matches = state.nearbyCities
+      .filter(city => [city.name, city.nameMr].filter(Boolean).some(name => name.toLocaleLowerCase().includes(value)))
+      .map(city => ({ ...city, distance: distanceKm(centerLat, centerLng, city.lat, city.lng) }))
+      .sort((a, b) => {
+        const aStarts = a.name.toLowerCase().startsWith(value) ? 0 : 1;
+        const bStarts = b.name.toLowerCase().startsWith(value) ? 0 : 1;
+        return aStarts - bStarts || a.distance - b.distance;
+      })
+      .slice(0, 7);
+    results.classList.add("open");
+    if (!matches.length) {
+      results.innerHTML = '<p class="search-message">Press Enter to search all real OpenStreetMap locations.</p>';
+      return;
+    }
+    results.innerHTML = `<div class="search-suggestion-label">NEARBY CITIES · OPENSTREETMAP</div>${matches.map((city, index) => `
+      <button class="search-result city-suggestion" type="button" data-city-index="${index}">
+        <span>◎</span><div><strong>${escapeHtml(state.language === "mr" && city.nameMr ? city.nameMr : city.name)}</strong>
+        <small>${escapeHtml(city.type)} · ${Math.round(city.distance)} km from Malegaon${city.nameMr && state.language !== "mr" ? ` · ${escapeHtml(city.nameMr)}` : ""}</small></div>
+      </button>`).join("")}<p class="search-message search-all-note">Press Enter to search roads and every mapped place.</p>`;
+    $$('[data-city-index]', results).forEach(button => button.addEventListener("click", () => selectNearbyCity(matches[Number(button.dataset.cityIndex)])));
+  }
+
+  function selectNearbyCity(city) {
+    $("#location-query").value = city.name;
+    selectSearchResult({
+      lat: String(city.lat), lon: String(city.lng), osm_type: "node", osm_id: city.id,
+      name: city.name, type: city.type, category: "place",
+      display_name: `${city.name}, nearby city/town, India`
+    });
+    state.map.flyTo([city.lat, city.lng], city.type === "city" ? 12 : 13, { duration: .8 });
+  }
+
   async function searchLocations(query) {
     const results = $("#search-results");
     results.classList.add("open");
     results.innerHTML = '<p class="search-message">Searching OpenStreetMap…</p>';
     const viewbox = state.config.region.searchViewbox.join(",");
-    const url = `https://nominatim.openstreetmap.org/search?format=jsonv2&addressdetails=1&limit=8&bounded=1&viewbox=${viewbox}&accept-language=${state.language === "mr" ? "mr,en" : "en"}&q=${encodeURIComponent(`${query}, Malegaon, Maharashtra, India`)}`;
+    const url = `https://nominatim.openstreetmap.org/search?format=jsonv2&addressdetails=1&limit=8&bounded=0&countrycodes=in&viewbox=${viewbox}&accept-language=${state.language === "mr" ? "mr,en" : "en"}&q=${encodeURIComponent(query)}`;
     try {
       const response = await fetch(url);
       if (!response.ok) throw new Error(`Search ${response.status}`);
       const items = await response.json();
       if (!items.length) {
-        results.innerHTML = '<p class="search-message">No matching mapped location was found inside the Malegaon region.</p>';
+        results.innerHTML = '<p class="search-message">No matching real OpenStreetMap location was found.</p>';
         return;
       }
       results.innerHTML = items.map((item, index) => `<button class="search-result" type="button" data-search-index="${index}"><span>⌖</span><div><strong>${escapeHtml(item.name || item.display_name.split(",")[0])}</strong><small>${escapeHtml(item.display_name)}</small></div></button>`).join("");
@@ -765,13 +817,35 @@
     showToast("One-page printable report downloaded.");
   }
 
-  function addAssistantMessage(text, sender = "bot") {
+  function addAssistantMessage(text, sender = "bot", sources = []) {
     const messages = $("#assistant-messages");
     const message = document.createElement("div");
     message.className = `assistant-message ${sender}`;
-    message.innerHTML = sender === "bot" ? `<span>✦</span><p>${escapeHtml(text)}</p>` : `<p>${escapeHtml(text)}</p>`;
+    if (sender === "bot") {
+      const icon = document.createElement("span");
+      icon.textContent = "✦";
+      message.appendChild(icon);
+    }
+    const bubble = document.createElement("p");
+    bubble.textContent = text;
+    if (sources.length) {
+      const sourceList = document.createElement("span");
+      sourceList.className = "assistant-sources";
+      sources.forEach(source => {
+        if (!source?.url) return;
+        const link = document.createElement("a");
+        link.href = source.url;
+        link.target = "_blank";
+        link.rel = "noopener noreferrer";
+        link.textContent = source.title || "Source";
+        sourceList.appendChild(link);
+      });
+      bubble.appendChild(sourceList);
+    }
+    message.appendChild(bubble);
     messages.appendChild(message);
     messages.scrollTop = messages.scrollHeight;
+    return message;
   }
 
   function offerGmailDraft(recipient, report) {
@@ -827,29 +901,90 @@
     }
   }
 
+  async function loadAiServiceStatus() {
+    try {
+      const response = await fetch(state.config.chatStatusEndpoint, { cache: "no-store" });
+      if (!response.ok) return;
+      state.aiService = await response.json();
+    } catch {
+      state.aiService = { configured: false, model: "local evidence mode" };
+    }
+    const status = $("#assistant-ai-status");
+    const subtitle = $("#assistant-subtitle");
+    if (state.aiService.configured) {
+      status.textContent = "GENERAL AI ONLINE";
+      status.classList.add("online");
+      subtitle.textContent = `${state.aiService.model} · web-aware`;
+    } else {
+      status.textContent = "PROJECT MODE";
+      subtitle.textContent = "Configure general AI with setup-ai.ps1";
+    }
+  }
+
+  function assistantContext() {
+    const point = state.environmental.timeline?.[Number($("#map-time")?.value)] || null;
+    return {
+      region: state.config.region.name,
+      language: state.language,
+      visibleBasemap: $("[data-base].active")?.dataset.base || "satellite",
+      liveModelAqi: state.liveAir?.current?.us_aqi ?? null,
+      liveModelTime: state.liveAir?.current?.time ?? null,
+      selectedLocation: state.selectedLocation ? { name: state.selectedLocation.name, type: state.selectedLocation.type, lat: state.selectedLocation.lat, lng: state.selectedLocation.lng } : null,
+      selectedHotspot: state.selectedHotspot ? { name: state.selectedHotspot.name, status: "demo" } : null,
+      timelinePoint: point ? { date: point.date, aqi: point.aqi, pm2_5: point.pm2_5, pm10: point.pm10 } : null,
+      evidenceWarning: "CAMS values are modeled estimates; no verified ground sensor is connected."
+    };
+  }
+
+  async function askGeneralAi(prompt) {
+    const pending = addAssistantMessage("Thinking and checking the available evidence…");
+    pending.classList.add("thinking");
+    try {
+      const response = await fetch(state.config.chatEndpoint, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message: prompt, messages: state.chatHistory.slice(-10), context: assistantContext() })
+      });
+      const result = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(result.error || `AI service ${response.status}`);
+      pending.remove();
+      addAssistantMessage(result.answer, "bot", result.sources || []);
+      state.chatHistory.push({ role: "user", content: prompt }, { role: "assistant", content: result.answer });
+      state.chatHistory = state.chatHistory.slice(-12);
+    } catch (error) {
+      pending.remove();
+      addAssistantMessage(`${error.message}. Run setup-ai.ps1 once to enable typo-tolerant, general web-aware answers. Project reports and map evidence remain available without an API key.`);
+    }
+  }
+
   function openAssistant(showEmail = false) {
     $("#assistant-panel").classList.add("open");
     if (showEmail) $("#email-composer").hidden = false;
   }
 
-  function handleAssistantPrompt(prompt) {
+  async function handleAssistantPrompt(prompt) {
     const normalized = prompt.toLowerCase();
     addAssistantMessage(prompt, "user");
-    if (normalized.includes("email") || normalized.includes("gmail") || normalized === "email") {
+    if (["email", "gmail", "email report"].includes(normalized)) {
       const report = buildReport();
-      addAssistantMessage(`I prepared “${report.title}”. Enter the server-authorized Gmail address below to send it securely.`);
+      addAssistantMessage(state.mailService.configured
+        ? `I prepared “${report.title}”. Click Send below and it will go immediately to ${state.mailService.recipient}.`
+        : `I prepared “${report.title}”. Automatic Gmail delivery needs the one-time secure server setup.`);
       $("#email-composer").hidden = false;
-    } else if (normalized.includes("report") || normalized === "report") {
+    } else if (["report", "create report", "download report"].includes(normalized)) {
       const report = buildReport();
       addAssistantMessage(`The one-page report is ready: ${report.title}. I am downloading a printable copy now.`);
       downloadReport();
+    } else if (normalized === "summary") {
+      addAssistantMessage(buildReport().summary);
+    } else if (state.aiService.configured) {
+      await askGeneralAi(prompt);
     } else if (normalized.includes("confidence") || normalized.includes("accuracy")) {
       addAssistantMessage("Model confidence, MAE, RMSE and R² are unavailable. AeroChem Sentinel deliberately does not invent these values.");
     } else if (normalized.includes("map") || normalized.includes("location")) {
-      addAssistantMessage("The base geography, search results, locations and category layers come from OpenStreetMap. Environmental outputs remain a separate demo layer.");
+      addAssistantMessage("The default map is real Esri satellite imagery with real OpenStreetMap locations. CAMS AQI is a live atmospheric model estimate, not a ground sensor reading.");
     } else {
-      const report = buildReport();
-      addAssistantMessage(report.summary);
+      addAssistantMessage("General AI is not configured on this server yet. Run setup-ai.ps1 once; then I can understand spelling mistakes and answer questions beyond this project. I can still create reports, email them, and explain the current map evidence now.");
     }
   }
 
@@ -874,15 +1009,11 @@
         body: JSON.stringify({ recipient, report })
       });
       const result = await response.json().catch(() => ({}));
-      if ([404, 501, 503].includes(response.status)) {
-        offerGmailDraft(recipient, report);
-        return;
-      }
       if (!response.ok) throw new Error(result.error || `Mail service ${response.status}`);
       addAssistantMessage(`Report sent successfully to ${result.recipient || recipient}.`);
       $("#email-composer").hidden = true;
     } catch (error) {
-      addAssistantMessage(`${error.message}. Start server.py with the Gmail environment variables configured; credentials must never be added to browser code.`);
+      addAssistantMessage(`${error.message}. Automatic delivery is unavailable on this server. Run setup-gmail.ps1 once; credentials must never be added to browser code.`);
     } finally {
       button.disabled = false;
       button.textContent = state.mailService.configured ? "Send formatted report now" : "Send secure report";
@@ -934,7 +1065,7 @@
       const query = $("#location-query").value.trim();
       if (query.length > 1) searchLocations(query);
     });
-    $("#location-query").addEventListener("input", () => { if (!$("#location-query").value.trim()) $("#search-results").classList.remove("open"); });
+    $("#location-query").addEventListener("input", event => suggestNearbyCities(event.target.value));
     $("#demo-button").addEventListener("click", () => toggleDemo());
     $("#inspector-close").addEventListener("click", () => $("#inspector").classList.remove("open"));
     $("#detail-back").addEventListener("click", () => setMode("investigate"));
@@ -1003,9 +1134,11 @@
   async function init() {
     state.config = await fetchJson("data/app-config.json", fallbackConfig);
     state.environmental = await fetchJson(state.config.environmentalDataUrl, fallbackEnvironmentalData);
+    const nearbyData = await fetchJson(state.config.nearbyCitiesUrl, { cities: [] });
+    state.nearbyCities = nearbyData.cities || [];
     initMap();
     bindEvents();
-    await Promise.all([loadLiveAirQuality(), loadMailServiceStatus()]);
+    await Promise.all([loadLiveAirQuality(), loadMailServiceStatus(), loadAiServiceStatus()]);
     updateEnvironmentalUi();
     state.reportContext = null;
     loadCategory("places");

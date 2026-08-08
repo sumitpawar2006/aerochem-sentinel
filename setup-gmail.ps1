@@ -1,7 +1,7 @@
 [CmdletBinding()]
 param(
   [string]$Email = "",
-  [int]$Port = 4174,
+  [int]$Port = 4173,
   [switch]$ConfigureOnly
 )
 
@@ -14,10 +14,23 @@ if (-not $Email -and (Get-Command gh -ErrorAction SilentlyContinue)) {
 }
 
 do {
-  $prompt = if ($Email) { "Gmail sender and report recipient [$Email]" } else { "Gmail sender and report recipient" }
-  $enteredEmail = Read-Host $prompt
-  if ($enteredEmail) { $Email = $enteredEmail.Trim() }
-} while ($Email -notmatch '^[^\s@]+@[^\s@]+\.[^\s@]+$')
+  $prompt = if ($Email) {
+    "Gmail address [$Email] - press Enter to accept"
+  } else {
+    "Gmail address (not the App Password)"
+  }
+  $enteredEmail = (Read-Host $prompt).Trim()
+  if (-not $enteredEmail -and $Email -match '^[^\s@]+@[^\s@]+\.[^\s@]+$') { break }
+  if (($enteredEmail -replace '\s', '') -match '^[A-Za-z]{16}$' -and $enteredEmail -notmatch '@') {
+    Write-Warning "That looks like an App Password. Do not enter it here. Press Enter to accept the email; the hidden password prompt is next."
+    continue
+  }
+  if ($enteredEmail -match '^[^\s@]+@[^\s@]+\.[^\s@]+$') {
+    $Email = $enteredEmail
+    break
+  }
+  Write-Warning "Enter a valid email address, or press Enter to accept the address in brackets."
+} while ($true)
 
 Write-Host "Create a Google App Password at https://myaccount.google.com/apppasswords" -ForegroundColor Cyan
 Write-Host "Use the 16-character App Password, not your normal Gmail password." -ForegroundColor DarkGray
@@ -44,21 +57,30 @@ $configuration = [ordered]@{
 $configuration | ConvertTo-Json | Set-Content -LiteralPath $configPath -Encoding UTF8
 Write-Host "Encrypted Gmail configuration saved for the current Windows user." -ForegroundColor Green
 
-if ($ConfigureOnly) { return }
-
-while (Get-NetTCPConnection -LocalAddress 127.0.0.1 -LocalPort $Port -State Listen -ErrorAction SilentlyContinue) {
-  $Port += 1
-}
-
-$python = (Get-Command python -ErrorAction Stop).Source
-$serverPath = Join-Path $appDirectory "server.py"
-$env:AEROCHEM_PORT = [string]$Port
-Start-Process -FilePath $python -ArgumentList @("-u", $serverPath) -WorkingDirectory $appDirectory -WindowStyle Hidden | Out-Null
-
 $url = "http://127.0.0.1:$Port/"
 $statusUrl = "${url}api/report/status"
 $ready = $false
+try {
+  $status = Invoke-RestMethod -Uri $statusUrl -TimeoutSec 2
+  if ($status.configured) { $ready = $true }
+} catch { }
+
+if ($ConfigureOnly) { return }
+
+if (-not $ready) {
+  while (Get-NetTCPConnection -LocalAddress 127.0.0.1 -LocalPort $Port -State Listen -ErrorAction SilentlyContinue) {
+    $Port += 1
+  }
+  $python = (Get-Command python -ErrorAction Stop).Source
+  $serverPath = Join-Path $appDirectory "server.py"
+  $env:AEROCHEM_PORT = [string]$Port
+  Start-Process -FilePath $python -ArgumentList @("-u", $serverPath) -WorkingDirectory $appDirectory -WindowStyle Hidden | Out-Null
+  $url = "http://127.0.0.1:$Port/"
+  $statusUrl = "${url}api/report/status"
+}
+
 for ($attempt = 0; $attempt -lt 20; $attempt += 1) {
+  if ($ready) { break }
   Start-Sleep -Milliseconds 300
   try {
     $status = Invoke-RestMethod -Uri $statusUrl -TimeoutSec 2

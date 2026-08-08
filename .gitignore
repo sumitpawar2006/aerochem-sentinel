@@ -3,5 +3,6 @@ __pycache__/
 .env
 .env.*
 .gmail-config.json
+.ai-config.json
 .DS_Store
 Thumbs.db

@@ -10,7 +10,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="">
-  <link rel="stylesheet" href="v2.css?v=20260808-3">
+  <link rel="stylesheet" href="v2.css?v=20260808-4">
 </head>
 <body>
   <a class="skip-link" href="#map">Skip to map</a>
@@ -44,8 +44,8 @@
 
     <form class="map-search" id="map-search" role="search">
       <span aria-hidden="true">⌕</span>
-      <label class="sr-only" for="location-query">Search real locations in Malegaon</label>
-      <input id="location-query" type="search" placeholder="Search a neighbourhood, road or place in Malegaon" autocomplete="off">
+      <label class="sr-only" for="location-query">Search real nearby cities, roads and places</label>
+      <input id="location-query" type="search" placeholder="Search nearby cities, roads or places" autocomplete="off">
       <kbd>ENTER</kbd>
       <button type="submit">Search</button>
       <div class="search-results" id="search-results" aria-live="polite"></div>
@@ -54,7 +54,7 @@
     <section class="situation-card" aria-labelledby="situation-title">
       <div class="situation-top">
         <div><span class="eyebrow">CURRENT SITUATION</span><h1 id="situation-title">Malegaon</h1><p>20.5576° N · 74.5247° E</p></div>
-        <span class="truth-badge">REAL MAP</span>
+        <span class="truth-badge">REAL SATELLITE</span>
       </div>
 
       <div class="aqi-empty" id="aqi-empty">
@@ -73,12 +73,12 @@
         <div><i class="demo"></i><span>Scenario layer</span><strong>AVAILABLE</strong></div>
       </div>
 
-      <button class="demo-button" id="demo-button" type="button"><span>◎</span><strong>Run demo scenario</strong><small>Shows clearly-labelled example hotspots</small></button>
+      <button class="demo-button" id="demo-button" type="button" hidden><span>◎</span><strong>Run demo scenario</strong><small>Shows clearly-labelled example hotspots</small></button>
     </section>
 
     <div class="base-switcher" role="group" aria-label="Map base style">
-      <button class="active" type="button" data-base="streets"><span class="base-preview streets"></span>Streets</button>
-      <button type="button" data-base="satellite"><span class="base-preview satellite"></span>Satellite</button>
+      <button type="button" data-base="streets"><span class="base-preview streets"></span>Streets</button>
+      <button class="active" type="button" data-base="satellite"><span class="base-preview satellite"></span>Real satellite</button>
       <button type="button" data-base="terrain"><span class="base-preview terrain"></span>Terrain</button>
     </div>
 
@@ -91,7 +91,7 @@
       <button type="button" data-layer="transport"><i>⇄</i><span>Transport</span><small>OSM</small></button>
       <button type="button" data-layer="boundary"><i>⬡</i><span>Taluka boundary</span><small>OSM</small></button>
       <button type="button" data-layer="coverage"><i>◌</i><span>Monitoring coverage</span><small>GROUND</small></button>
-      <button class="demo-layer" type="button" data-layer="demo"><i>◉</i><span>Demo AQI</span><small>MODEL DEMO</small></button>
+      <button class="demo-layer" type="button" data-layer="demo" hidden><i>◉</i><span>Demo AQI</span><small>MODEL DEMO</small></button>
     </section>
 
     <aside class="inspector open" id="inspector" aria-label="Map intelligence panel">
@@ -203,13 +203,13 @@
     <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
     <button class="assistant-launcher" id="assistant-launcher" type="button"><span>✦</span><strong>Sentinel Assistant</strong><i></i></button>
-    <aside class="assistant-panel" id="assistant-panel" aria-label="Sentinel report assistant">
-      <div class="assistant-head"><div><span>✦</span><p><strong>Sentinel Assistant</strong><small>Report & evidence copilot</small></p></div><button id="assistant-close" type="button" aria-label="Close assistant">×</button></div>
+    <aside class="assistant-panel" id="assistant-panel" aria-label="General AI and map assistant">
+      <div class="assistant-head"><div><span>✦</span><p><strong>Sentinel AI</strong><small id="assistant-subtitle">General AI · map-aware</small></p><em class="assistant-ai-status" id="assistant-ai-status">PROJECT MODE</em></div><button id="assistant-close" type="button" aria-label="Close assistant">×</button></div>
       <div class="assistant-messages" id="assistant-messages" aria-live="polite">
-        <div class="assistant-message bot"><span>✦</span><p>I can summarize the selected location, prepare a one-page report, and send it through the secure Gmail service when configured.</p></div>
+        <div class="assistant-message bot"><span>✦</span><p>Ask me anything. I understand likely spelling mistakes, Marathi, Hindi and English, and I can also explain this map, prepare reports and send them securely.</p></div>
       </div>
-      <div class="assistant-prompts"><button type="button" data-prompt="summary">Summarize situation</button><button type="button" data-prompt="report">Create report</button><button type="button" data-prompt="email">Email report</button></div>
-      <form class="assistant-form" id="assistant-form"><label class="sr-only" for="assistant-input">Message Sentinel Assistant</label><input id="assistant-input" placeholder="Ask about the map or request a report"><button type="submit">↑</button></form>
+      <div class="assistant-prompts"><button type="button" data-prompt="summary">Summarize situation</button><button type="button" data-prompt="What can you help me with?">Ask anything</button><button type="button" data-prompt="report">Create report</button><button type="button" data-prompt="email">Email report</button></div>
+      <form class="assistant-form" id="assistant-form"><label class="sr-only" for="assistant-input">Message Sentinel AI</label><input id="assistant-input" placeholder="Ask anything — spelling mistakes are okay"><button type="submit">↑</button></form>
       <div class="email-composer" id="email-composer" hidden><label for="report-email" id="report-email-label">Gmail recipient</label><input id="report-email" type="email" placeholder="team@gmail.com"><button id="send-email-report" type="button">Send secure report</button><p id="email-service-note">Requires one-time secure Gmail setup. Credentials never enter this page.</p></div>
     </aside>
 
@@ -226,6 +226,6 @@
   </dialog>
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
-  <script src="v2.js?v=20260808-3"></script>
+  <script src="v2.js?v=20260808-4"></script>
 </body>
 </html>

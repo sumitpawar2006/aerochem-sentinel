@@ -1,0 +1,27 @@
+{
+  "source": "OpenStreetMap",
+  "retrievedAt": "2026-08-08T14:16:51Z",
+  "center": [20.5576062, 74.5246514],
+  "cities": [
+    {"id":"245692508","name":"Amalner","nameMr":"अमळनेर","type":"town","lat":21.0400032,"lng":75.0703748,"population":96000},
+    {"id":"245688877","name":"Chalisgaon","nameMr":"चाळीसगाव","type":"town","lat":20.4626213,"lng":75.0069134,"population":97550},
+    {"id":"245688086","name":"Chandvad","nameMr":"चांदवड","type":"town","lat":20.3278147,"lng":74.2387228,"population":25300},
+    {"id":"245691673","name":"Dhule","nameMr":"धुळे","type":"city","lat":20.898,"lng":74.7732,"population":375550},
+    {"id":"7016330787","name":"Dindori","nameMr":null,"type":"town","lat":20.2037292,"lng":73.8325882,"population":null},
+    {"id":"245687808","name":"Kannad","nameMr":"कन्नड","type":"town","lat":20.2654298,"lng":75.1322409,"population":40800},
+    {"id":"245686261","name":"Kopargaon","nameMr":"कोपरगाव","type":"town","lat":19.885,"lng":74.4762,"population":65300},
+    {"id":"245689525","name":"Malegaon","nameMr":"मालेगाव","type":"city","lat":20.5576062,"lng":74.5246514,"population":471300},
+    {"id":"3073020308","name":"Manmad","nameMr":"मनमाड","type":"town","lat":20.2519828,"lng":74.4392286,"population":80500},
+    {"id":"3229723853","name":"Nampur","nameMr":"नामपूर","type":"town","lat":20.7295457,"lng":74.3109024,"population":null},
+    {"id":"1185694945","name":"Nandgaon","nameMr":"नांदगाव","type":"town","lat":20.307866,"lng":74.6572349,"population":23600},
+    {"id":"245686763","name":"Nashik","nameMr":"नाशिक","type":"city","lat":20.0112475,"lng":73.7902364,"population":1486000},
+    {"id":"650711320","name":"Niphad","nameMr":"निफाड","type":"town","lat":20.0796924,"lng":74.1071124,"population":null},
+    {"id":"2668344199","name":"Pachora","nameMr":"पाचोरा","type":"town","lat":20.667858,"lng":75.3505158,"population":59600},
+    {"id":"245692256","name":"Sakri","nameMr":"साक्री","type":"town","lat":20.9910829,"lng":74.3154391,"population":21700},
+    {"id":"2299756706","name":"Satana","nameMr":"सटाणा","type":"town","lat":20.5991006,"lng":74.2021078,"population":37700},
+    {"id":"4861569311","name":"Shirdi","nameMr":"शिर्डी","type":"town","lat":19.7668121,"lng":74.4754386,"population":36000},
+    {"id":"2299042250","name":"Sinnar","nameMr":"सिन्नर","type":"town","lat":19.8453138,"lng":74.0000241,"population":65300},
+    {"id":"245686460","name":"Vaijapur","nameMr":"वैजापूर","type":"town","lat":19.9266272,"lng":74.7286135,"population":null},
+    {"id":"245686900","name":"Yeola","nameMr":"येवला","type":"town","lat":20.0429079,"lng":74.4880389,"population":49800}
+  ]
+}

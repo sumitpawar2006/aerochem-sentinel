@@ -1,4 +1,4 @@
-"""AeroChem Sentinel local server with an optional secure Gmail report endpoint.
+"""AeroChem Sentinel local server with secure Gmail and general AI endpoints.
 
 Email delivery can use the encrypted Windows setup created by setup-gmail.ps1,
 or these environment variables:
@@ -28,8 +28,10 @@ from typing import Any
 
 APP_DIR = Path(__file__).resolve().parent
 PRIVATE_MAIL_CONFIG = APP_DIR / ".gmail-config.json"
+PRIVATE_AI_CONFIG = APP_DIR / ".ai-config.json"
 EMAIL_RE = re.compile(r"^[^\s@]+@[^\s@]+\.[^\s@]+$")
 MAX_BODY_BYTES = 64 * 1024
+MAX_CHAT_MESSAGES = 12
 
 
 def _decrypt_windows_secret(encrypted_value: str) -> str:
@@ -78,6 +80,101 @@ def _mail_settings() -> tuple[str, str, str]:
     password = os.environ.get("AEROCHEM_GMAIL_APP_PASSWORD", "").strip() or private_password
     recipient = os.environ.get("AEROCHEM_REPORT_RECIPIENT", "").strip() or private_recipient
     return user, password, recipient
+
+
+def _ai_settings() -> tuple[str, str]:
+    key = os.environ.get("OPENAI_API_KEY", "").strip()
+    model = os.environ.get("AEROCHEM_OPENAI_MODEL", "").strip()
+    if PRIVATE_AI_CONFIG.exists():
+        try:
+            payload = json.loads(PRIVATE_AI_CONFIG.read_text(encoding="utf-8-sig"))
+        except (OSError, json.JSONDecodeError):
+            payload = {}
+        if not key:
+            key = _decrypt_windows_secret(str(payload.get("apiKeyDpapi", "")).strip())
+        if not model:
+            model = str(payload.get("model", "")).strip()
+    return key, model or "gpt-5.6-terra"
+
+
+def _clean_chat_messages(raw_messages: Any, current_message: str) -> list[dict[str, str]]:
+    messages: list[dict[str, str]] = []
+    if isinstance(raw_messages, list):
+        for item in raw_messages[-MAX_CHAT_MESSAGES:]:
+            if not isinstance(item, dict):
+                continue
+            role = str(item.get("role", ""))
+            content = str(item.get("content", "")).strip()[:5000]
+            if role in {"user", "assistant"} and content:
+                messages.append({"role": role, "content": content})
+    messages.append({"role": "user", "content": current_message[:5000]})
+    return messages[-MAX_CHAT_MESSAGES:]
+
+
+def _extract_openai_answer(payload: dict[str, Any]) -> tuple[str, list[dict[str, str]]]:
+    parts: list[str] = []
+    sources: list[dict[str, str]] = []
+    seen_urls: set[str] = set()
+    for output_item in payload.get("output", []):
+        if not isinstance(output_item, dict) or output_item.get("type") != "message":
+            continue
+        for content in output_item.get("content", []):
+            if not isinstance(content, dict) or content.get("type") != "output_text":
+                continue
+            text = str(content.get("text", "")).strip()
+            if text:
+                parts.append(text)
+            for annotation in content.get("annotations", []):
+                if not isinstance(annotation, dict) or annotation.get("type") != "url_citation":
+                    continue
+                url = str(annotation.get("url", "")).strip()
+                if url and url not in seen_urls:
+                    seen_urls.add(url)
+                    sources.append({"url": url, "title": str(annotation.get("title", url))[:160]})
+    return "\n\n".join(parts).strip(), sources[:6]
+
+
+def _request_ai_answer(api_key: str, model: str, payload: dict[str, Any]) -> tuple[str, list[dict[str, str]]]:
+    message = str(payload.get("message", "")).strip()
+    if not message:
+        raise ValueError("A message is required")
+    context = payload.get("context") if isinstance(payload.get("context"), dict) else {}
+    context_text = json.dumps(context, ensure_ascii=False)[:5000]
+    instructions = (
+        "You are Sentinel AI, a capable general-purpose assistant inside the AeroChem environmental map. "
+        "Answer legitimate questions on any topic, not only this project. Silently understand likely spelling, "
+        "grammar, transliteration, Marathi, Hindi, and English mistakes. Ask a clarification only when ambiguity "
+        "would materially change the answer. Prefer accurate, verifiable answers and use web search for current "
+        "or unstable facts. Never pretend certainty: clearly say when evidence is missing or a claim cannot be "
+        "verified. For environmental questions, distinguish observed measurements, modeled estimates, and demos. "
+        "Be concise but complete, and answer in the user's language when practical. "
+        f"Current application context: {context_text}"
+    )
+    request_payload = {
+        "model": model,
+        "instructions": instructions,
+        "input": _clean_chat_messages(payload.get("messages"), message),
+        "tools": [{"type": "web_search"}],
+        "reasoning": {"effort": "low"},
+        "text": {"verbosity": "medium"},
+        "store": False,
+    }
+    request = urllib.request.Request(
+        "https://api.openai.com/v1/responses",
+        data=json.dumps(request_payload).encode("utf-8"),
+        headers={
+            "Authorization": f"Bearer {api_key}",
+            "Content-Type": "application/json",
+            "User-Agent": "AeroChem-Sentinel/3.0",
+        },
+        method="POST",
+    )
+    with urllib.request.urlopen(request, timeout=90) as response:
+        response_payload = json.loads(response.read().decode("utf-8"))
+    answer, sources = _extract_openai_answer(response_payload)
+    if not answer:
+        raise ValueError("The AI service returned no text")
+    return answer, sources
 
 
 def _masked_email(value: str) -> str:
@@ -162,10 +259,18 @@ class AeroChemHandler(SimpleHTTPRequestHandler):
                 },
             )
             return
+        if parsed.path == "/api/chat/status":
+            api_key, model = _ai_settings()
+            self._json_response(
+                HTTPStatus.OK,
+                {"configured": bool(api_key), "model": model if api_key else "local evidence mode"},
+            )
+            return
         super().do_GET()
 
     def do_POST(self) -> None:  # noqa: N802
-        if self.path != "/api/report":
+        parsed = urlparse(self.path)
+        if parsed.path not in {"/api/report", "/api/chat"}:
             self._json_response(HTTPStatus.NOT_FOUND, {"ok": False, "error": "Not found"})
             return
 
@@ -178,6 +283,32 @@ class AeroChemHandler(SimpleHTTPRequestHandler):
             payload = json.loads(self.rfile.read(content_length).decode("utf-8"))
         except (UnicodeDecodeError, json.JSONDecodeError):
             self._json_response(HTTPStatus.BAD_REQUEST, {"ok": False, "error": "Invalid JSON"})
+            return
+
+        if parsed.path == "/api/chat":
+            api_key, model = _ai_settings()
+            if not api_key:
+                self._json_response(
+                    HTTPStatus.SERVICE_UNAVAILABLE,
+                    {"ok": False, "error": "General AI is not configured on this server"},
+                )
+                return
+            try:
+                answer, sources = _request_ai_answer(api_key, model, payload)
+            except ValueError as exc:
+                self._json_response(HTTPStatus.BAD_REQUEST, {"ok": False, "error": str(exc)})
+                return
+            except (OSError, urllib.error.URLError, urllib.error.HTTPError, json.JSONDecodeError) as exc:
+                self.log_error("OpenAI response failed: %s", exc)
+                self._json_response(
+                    HTTPStatus.BAD_GATEWAY,
+                    {"ok": False, "error": "The general AI service is temporarily unavailable"},
+                )
+                return
+            self._json_response(
+                HTTPStatus.OK,
+                {"ok": True, "answer": answer, "sources": sources, "model": model},
+            )
             return
 
         user, app_password, configured_recipient = _mail_settings()

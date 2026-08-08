@@ -7,6 +7,7 @@
     "osmBoundaryRelation": 10345577
   },
   "environmentalDataUrl": "data/environmental-snapshot.json",
+  "nearbyCitiesUrl": "data/nearby-cities.json",
   "liveAirQuality": {
     "enabled": true,
     "endpoint": "/api/live-aqi",
@@ -17,6 +18,8 @@
   },
   "reportEndpoint": "/api/report",
   "reportStatusEndpoint": "/api/report/status",
+  "chatEndpoint": "/api/chat",
+  "chatStatusEndpoint": "/api/chat/status",
   "satelliteBasemap": {
     "provider": "Esri World Imagery",
     "type": "real_imagery_basemap",

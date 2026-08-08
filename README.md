@@ -27,16 +27,16 @@ Use `server.py`, not `python -m http.server`: the included server supplies the l
 
 ## What is included
 
-- Full-screen Leaflet map with OpenStreetMap streets, Esri satellite imagery, and OpenTopoMap terrain
+- Full-screen Leaflet map with real Esri satellite imagery as the default, plus OpenStreetMap streets and OpenTopoMap terrain
 - Live modeled US AQI, PM2.5, PM10, and a 24-hour CAMS model timeline
-- Real OpenStreetMap places, hospitals, education, industry, transport, search, and Malegaon Taluka boundary
+- Real OpenStreetMap places, hospitals, education, industry, transport, nearby-city autocomplete, global India search, and Malegaon Taluka boundary
 - Four work areas: Situation, Investigate, Trends, and Method
 - Observed-versus-modeled comparison, monitoring coverage state, confidence/validation evidence state
 - Clearly labeled demo hotspots when no local sensor or ground-station dataset is available
 - Before/after and seasonal scenario comparison
 - Downloadable, print-ready one-page HTML reports
 - English/Marathi navigation support and an integrated presentation mode
-- Sentinel Assistant for evidence summaries, report preparation, downloads, and Gmail delivery
+- Sentinel AI for general web-aware questions, typo-tolerant multilingual chat, evidence summaries, reports, and Gmail delivery
 - Desktop, tablet, and mobile layouts
 
 ## Automatic Gmail report delivery
@@ -62,6 +62,16 @@ Open the Sentinel Assistant and choose **Email this report**. For safety, the se
 
 GitHub Pages hosts the static public frontend and loads live modeled AQI directly from Open-Meteo. Secure automatic Gmail sending requires `server.py`, so it is available when the repository is run locally or deployed to a Python-capable host with the environment variables above. On GitHub Pages or a basic static server, the assistant prepares a complete Gmail draft instead of showing a server error; the user reviews it and presses Send in Gmail.
 
+## General Sentinel AI
+
+The map and project assistant work without an API key. To enable general questions, spelling-tolerant multilingual answers, current web lookup, and cited sources, create an OpenAI API key and run the one-time Windows setup:
+
+```powershell
+.\setup-ai.ps1
+```
+
+The key is entered in a hidden prompt and encrypted for the current Windows user. It is never added to browser JavaScript or Git. OpenAI API usage is billed separately. If `server.py` is already running on port 4173, the script reuses it; otherwise it starts the server and opens the correct address.
+
 ## Data truth and integration
 
 - Live values are CAMS model estimates, not readings from a device or monitoring station.
@@ -78,5 +88,7 @@ GitHub Pages hosts the static public frontend and loads live modeled AQI directl
 - `v2.js` — map, live data, interactions, reports, and assistant
 - `server.py` — static server, live-AQI proxy, and Gmail endpoint
 - `setup-gmail.ps1` — one-time encrypted Windows Gmail setup and launcher
+- `setup-ai.ps1` — one-time encrypted Windows OpenAI setup
 - `data/app-config.json` — region and integration configuration
+- `data/nearby-cities.json` — real OpenStreetMap city/town autocomplete catalogue
 - `data/environmental-snapshot.json` — labeled fallback/demo scenario data
