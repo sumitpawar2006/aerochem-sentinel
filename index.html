@@ -1,0 +1,231 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f2f4ef">
+  <meta name="description" content="AeroChem Sentinel — map-first environmental intelligence for Malegaon.">
+  <title>AeroChem Sentinel · Malegaon Map Intelligence</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="">
+  <link rel="stylesheet" href="v2.css">
+</head>
+<body>
+  <a class="skip-link" href="#map">Skip to map</a>
+
+  <header class="app-header">
+    <a class="identity" href="#" aria-label="AeroChem Sentinel map">
+      <span class="identity-mark" aria-hidden="true"><i></i><b></b></span>
+      <span><strong>AeroChem</strong><small>SENTINEL</small></span>
+    </a>
+
+    <nav class="mode-nav" aria-label="Workspace modes">
+      <button class="active" type="button" data-mode="situation"><span>01</span> <b data-i18n="navSituation">Situation</b></button>
+      <button type="button" data-mode="investigate"><span>02</span> <b data-i18n="navInvestigate">Investigate</b></button>
+      <button type="button" data-mode="trends"><span>03</span> <b data-i18n="navTrends">Trends</b></button>
+      <button type="button" data-mode="method"><span>04</span> <b data-i18n="navMethod">Method</b></button>
+    </nav>
+
+    <div class="header-status">
+      <span class="connection"><i></i> MAP ONLINE</span>
+      <button class="language-button" id="language-button" type="button" aria-label="Switch between English and Marathi">EN / मराठी</button>
+      <button class="present-button" id="present-button" type="button"><span>▶</span> Present</button>
+      <button class="region-button" type="button" id="region-button">
+        <span>REGION</span><strong>Malegaon, Nashik</strong><i>⌄</i>
+      </button>
+      <button class="mobile-menu" id="mobile-menu" type="button" aria-label="Open workspace menu" aria-expanded="false"><i></i><i></i></button>
+    </div>
+  </header>
+
+  <main class="map-workspace">
+    <div id="map" role="application" aria-label="Real interactive map of Malegaon with selectable OpenStreetMap locations"></div>
+
+    <form class="map-search" id="map-search" role="search">
+      <span aria-hidden="true">⌕</span>
+      <label class="sr-only" for="location-query">Search real locations in Malegaon</label>
+      <input id="location-query" type="search" placeholder="Search a neighbourhood, road or place in Malegaon" autocomplete="off">
+      <kbd>ENTER</kbd>
+      <button type="submit">Search</button>
+      <div class="search-results" id="search-results" aria-live="polite"></div>
+    </form>
+
+    <section class="situation-card" aria-labelledby="situation-title">
+      <div class="situation-top">
+        <div><span class="eyebrow">CURRENT SITUATION</span><h1 id="situation-title">Malegaon</h1><p>20.5576° N · 74.5247° E</p></div>
+        <span class="truth-badge">REAL MAP</span>
+      </div>
+
+      <div class="aqi-empty" id="aqi-empty">
+        <div><strong id="live-aqi">···</strong><span id="live-aqi-scale">US AQI</span></div>
+        <p><strong id="live-aqi-category">Loading live model data</strong><span id="live-aqi-source">CAMS global atmosphere model</span></p>
+      </div>
+      <div class="aqi-demo" id="aqi-demo" hidden>
+        <div><strong>218</strong><span>DEMO AQI</span></div>
+        <p><strong>Poor · demonstration</strong>Illustrative model output, not a current measurement.</p>
+      </div>
+
+      <div class="data-readiness">
+        <div><i class="ready"></i><span>Base geography</span><strong>OPENSTREETMAP</strong></div>
+        <div><i class="waiting" id="live-feed-dot"></i><span>Live AQ model</span><strong id="live-feed-status">CONNECTING</strong></div>
+        <div><i class="waiting"></i><span>Ground reference</span><strong>NOT CONNECTED</strong></div>
+        <div><i class="demo"></i><span>Scenario layer</span><strong>AVAILABLE</strong></div>
+      </div>
+
+      <button class="demo-button" id="demo-button" type="button"><span>◎</span><strong>Run demo scenario</strong><small>Shows clearly-labelled example hotspots</small></button>
+    </section>
+
+    <div class="base-switcher" role="group" aria-label="Map base style">
+      <button class="active" type="button" data-base="streets"><span class="base-preview streets"></span>Streets</button>
+      <button type="button" data-base="satellite"><span class="base-preview satellite"></span>Satellite</button>
+      <button type="button" data-base="terrain"><span class="base-preview terrain"></span>Terrain</button>
+    </div>
+
+    <section class="layer-dock" aria-label="Map layers">
+      <span>LAYERS</span>
+      <button class="active" type="button" data-layer="places"><i>⌖</i><span>Places</span><small>OSM</small></button>
+      <button type="button" data-layer="hospitals"><i>+</i><span>Hospitals</span><small>OSM</small></button>
+      <button type="button" data-layer="schools"><i>□</i><span>Education</span><small>OSM</small></button>
+      <button type="button" data-layer="industry"><i>⌂</i><span>Industry</span><small>OSM</small></button>
+      <button type="button" data-layer="transport"><i>⇄</i><span>Transport</span><small>OSM</small></button>
+      <button type="button" data-layer="boundary"><i>⬡</i><span>Taluka boundary</span><small>OSM</small></button>
+      <button type="button" data-layer="coverage"><i>◌</i><span>Monitoring coverage</span><small>GROUND</small></button>
+      <button class="demo-layer" type="button" data-layer="demo"><i>◉</i><span>Demo AQI</span><small>MODEL DEMO</small></button>
+    </section>
+
+    <aside class="inspector open" id="inspector" aria-label="Map intelligence panel">
+      <div class="inspector-handle" aria-hidden="true"></div>
+      <div class="inspector-head">
+        <div><span class="eyebrow" id="inspector-kicker">SITUATION INTELLIGENCE</span><h2 id="inspector-title">Evidence before claims</h2></div>
+        <button type="button" id="inspector-close" aria-label="Close intelligence panel">×</button>
+      </div>
+
+      <div class="inspector-body mode-panel" id="situation-panel">
+        <span class="section-label">OBSERVED VS PREDICTED</span>
+        <div class="comparison-block">
+          <div class="comparison-side observed"><span>OBSERVED AQI</span><strong id="observed-aqi">—</strong><small>Ground station not connected</small></div>
+          <i>↔</i>
+          <div class="comparison-side predicted"><span>LIVE MODEL AQI</span><strong id="predicted-aqi">···</strong><small id="predicted-source">CAMS global model · not observed</small></div>
+        </div>
+        <div class="snapshot-meta"><div><span>MODEL DATE</span><strong id="model-date">Connecting…</strong></div><div><span>DATA STATUS</span><strong id="snapshot-status">LIVE MODEL</strong></div></div>
+        <div class="evidence-section"><div class="section-row"><div><span class="section-label">PREDICTION INTERVAL</span><h3>Confidence evidence</h3></div><span class="missing-chip">UNAVAILABLE</span></div><div class="confidence-empty"><span>—</span><p><strong>No validated interval</strong>A confidence percentage is intentionally withheld until calibrated model evidence is connected.</p></div></div>
+        <div class="evidence-section"><div class="section-row"><div><span class="section-label">MONITORING COVERAGE</span><h3>Ground-station reach</h3></div><button class="small-map-action" type="button" data-enable-layer="coverage">Show on map</button></div><div class="coverage-empty"><div class="coverage-radar"><i></i><i></i><span>?</span></div><p><strong>Station inventory unavailable</strong>Connect verified station coordinates to reveal measured coverage and remaining spatial gaps.</p></div></div>
+        <div class="model-evidence-mini"><div><span>MAE</span><strong>—</strong></div><div><span>RMSE</span><strong>—</strong></div><div><span>R²</span><strong>—</strong></div></div>
+        <button class="connect-button" type="button" id="show-contract">View production data contract</button>
+      </div>
+
+      <div class="inspector-body mode-panel" id="investigate-panel" hidden>
+        <div class="catalogue-summary">
+          <div><strong id="location-count">—</strong><span>locations loaded</span></div>
+          <p id="catalogue-status"><i></i> Loading live OpenStreetMap features…</p>
+        </div>
+        <div class="catalogue-filter">
+          <button class="active" type="button" data-category="places">Places</button>
+          <button type="button" data-category="hospitals">Health</button>
+          <button type="button" data-category="schools">Education</button>
+          <button type="button" data-category="industry">Industry</button>
+          <button type="button" data-category="transport">Transport</button>
+        </div>
+        <div class="location-list" id="location-list" role="list"></div>
+        <p class="catalogue-note">Location names and coordinates come from OpenStreetMap. No AQI is assigned to a place unless a real observation or model output is connected.</p>
+      </div>
+
+      <div class="inspector-body mode-panel" id="trends-panel" hidden>
+        <span class="section-label">TEMPORAL EXPLORER · DEMO</span>
+        <div class="compare-hero"><strong>24 h</strong><p id="trend-source-label">Connecting live model timeline</p><span id="trend-status-label">LOADING</span></div>
+        <div class="analysis-switch"><button class="active" type="button" data-compare-state="before">Before · −24 h</button><button type="button" data-compare-state="after">After · selected</button></div>
+        <div class="mini-chart"><svg id="compare-chart" viewBox="0 0 340 150" role="img" aria-label="Demo AQI timeline"></svg></div>
+        <div class="time-selection"><span>00:00</span><input type="range" id="compare-time" min="0" max="7" value="7"><span>Now</span></div>
+        <div class="compare-readout"><div><span>Selected AQI</span><strong id="compare-aqi">—</strong></div><div><span>PM₂.₅</span><strong id="compare-hcho">—</strong></div><div><span>PM₁₀</span><strong id="compare-wind">—</strong></div></div>
+        <div class="season-compare"><span class="section-label">SEASONAL MAP PROFILE</span><div class="analysis-switch"><button class="active" type="button" data-season="winter">Winter</button><button type="button" data-season="summer">Summer</button><button type="button" data-season="monsoon">Monsoon</button></div><div class="season-readout"><span>Map overlay profile</span><strong id="season-readout">Winter · AQI 212 · HCHO index 78</strong><small>Demonstration comparison</small></div></div>
+        <div class="honesty-note"><i>i</i><p id="trends-note">The AQI timeline uses current atmospheric model output, not a ground-station observation. Seasonal profiles remain demonstration data.</p></div>
+      </div>
+
+      <div class="inspector-body mode-panel" id="method-panel" hidden>
+        <span class="section-label">HOW IT WORKS</span>
+        <h3>From orbit to action</h3>
+        <p class="mode-intro">A concise workflow designed for regions where ground monitoring is spatially limited.</p>
+        <div class="method-steps">
+          <button class="active" type="button" data-step="0"><span>01</span><i>◫</i><div><strong>Observe</strong><small>Satellite, weather and reference data</small></div></button>
+          <button type="button" data-step="1"><span>02</span><i>⌘</i><div><strong>Fuse</strong><small>Align space, time, units and quality</small></div></button>
+          <button type="button" data-step="2"><span>03</span><i>◆</i><div><strong>Predict</strong><small>Estimate surface AQI with ML</small></div></button>
+          <button type="button" data-step="3"><span>04</span><i>⌖</i><div><strong>Understand</strong><small>Detect hotspots and interpret sources</small></div></button>
+          <button type="button" data-step="4"><span>05</span><i>→</i><div><strong>Act</strong><small>Communicate risk and next steps</small></div></button>
+        </div>
+        <div class="method-explanation" id="method-explanation"><strong>Observe the environmental system</strong><p>Start with dated, quality-filtered inputs. Satellite column values remain distinct from ground-level concentrations.</p></div>
+      </div>
+
+      <div class="location-detail" id="location-detail" hidden>
+        <button class="back-button" type="button" id="detail-back">← Back to locations</button>
+        <div class="detail-map-pin">⌖</div>
+        <span class="section-label" id="detail-type">OSM LOCATION</span>
+        <h3 id="detail-name">Malegaon</h3>
+        <p id="detail-address">Malegaon, Nashik, Maharashtra</p>
+        <dl><div><dt>Latitude</dt><dd id="detail-lat">20.5576</dd></div><div><dt>Longitude</dt><dd id="detail-lng">74.5247</dd></div><div><dt>Map source</dt><dd>OpenStreetMap</dd></div><div><dt>Environmental data</dt><dd>Not connected</dd></div></dl>
+        <div class="no-aqi-message"><span>—</span><p><strong>No location AQI available</strong>A real location does not imply a real environmental observation.</p></div>
+        <a class="osm-link" id="detail-osm-link" href="https://www.openstreetmap.org" target="_blank" rel="noopener">Open source feature on OSM ↗</a>
+        <button class="report-button" id="download-report" type="button">Download one-page location report</button>
+        <button class="email-report-button" id="email-location-report" type="button">Ask Sentinel Assistant to email this report</button>
+      </div>
+
+      <div class="location-detail hotspot-detail" id="hotspot-detail" hidden>
+        <button class="back-button" type="button" id="hotspot-back">← Back to investigation</button>
+        <div class="hotspot-verdict"><span>MODEL DEMO</span><strong id="hotspot-aqi">218</strong><small id="hotspot-category">POOR</small></div>
+        <span class="section-label">HOTSPOT INTELLIGENCE · DEMO</span>
+        <h3 id="hotspot-name">Illustrative hotspot</h3>
+        <p id="hotspot-coordinates">20.5576° N · 74.5247° E</p>
+        <dl><div><dt>HCHO</dt><dd id="hotspot-hcho">—</dd></div><div><dt>NO₂</dt><dd id="hotspot-no2">—</dd></div><div><dt>Probable source</dt><dd id="hotspot-source">Heuristic only</dd></div><div><dt>Reliability</dt><dd id="hotspot-reliability">Unavailable</dd></div></dl>
+        <div class="no-aqi-message"><span>!</span><p><strong>Not a live observation</strong>This report uses the external demonstration dataset and remains separate from real map geography.</p></div>
+        <button class="report-button" id="download-hotspot-report" type="button">Download one-page hotspot report</button>
+        <button class="email-report-button" id="email-hotspot-report" type="button">Ask Sentinel Assistant to email this report</button>
+      </div>
+    </aside>
+
+    <section class="map-timeline" aria-label="Permanent map timeline">
+      <button id="timeline-play" type="button" aria-label="Play demo time sequence">▶</button>
+      <div class="timeline-copy"><span>MAP TIME</span><strong id="timeline-date">08 Aug 2026 · 16:00 IST</strong></div>
+      <div class="timeline-track"><input id="map-time" type="range" min="0" max="7" value="7" aria-label="Map time"><div class="timeline-ticks"><span>-24h</span><span>-18h</span><span>-12h</span><span>-6h</span><span>Now</span></div></div>
+      <span class="timeline-state">DEMO WHEN AQI LAYER IS ON</span>
+    </section>
+
+    <div class="map-statusbar">
+      <span><i class="live-dot"></i> LIVE MAP DATA</span>
+      <span id="visible-layer-status">Places · OpenStreetMap</span>
+      <span id="cursor-coordinates">20.5576° N · 74.5247° E</span>
+      <span>© OpenStreetMap contributors</span>
+    </div>
+
+    <div class="demo-legend" id="demo-legend" hidden>
+      <span>DEMO AQI OVERLAY</span><div><i class="moderate"></i>Moderate</div><div><i class="poor"></i>Poor</div><div><i class="very-poor"></i>Very poor</div>
+    </div>
+
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+    <button class="assistant-launcher" id="assistant-launcher" type="button"><span>✦</span><strong>Sentinel Assistant</strong><i></i></button>
+    <aside class="assistant-panel" id="assistant-panel" aria-label="Sentinel report assistant">
+      <div class="assistant-head"><div><span>✦</span><p><strong>Sentinel Assistant</strong><small>Report & evidence copilot</small></p></div><button id="assistant-close" type="button" aria-label="Close assistant">×</button></div>
+      <div class="assistant-messages" id="assistant-messages" aria-live="polite">
+        <div class="assistant-message bot"><span>✦</span><p>I can summarize the selected location, prepare a one-page report, and send it through the secure Gmail service when configured.</p></div>
+      </div>
+      <div class="assistant-prompts"><button type="button" data-prompt="summary">Summarize situation</button><button type="button" data-prompt="report">Create report</button><button type="button" data-prompt="email">Email report</button></div>
+      <form class="assistant-form" id="assistant-form"><label class="sr-only" for="assistant-input">Message Sentinel Assistant</label><input id="assistant-input" placeholder="Ask about the map or request a report"><button type="submit">↑</button></form>
+      <div class="email-composer" id="email-composer" hidden><label for="report-email">Gmail recipient</label><input id="report-email" type="email" placeholder="team@gmail.com"><button id="send-email-report" type="button">Send secure report</button><p>Requires server-side Gmail environment variables. Credentials never enter this page.</p></div>
+    </aside>
+
+    <div class="presentation-bar" id="presentation-bar" hidden>
+      <span id="presentation-step">01 / 04</span><div><strong id="presentation-title">Situation first</strong><p id="presentation-copy">Real geography stays separate from unavailable environmental evidence.</p></div><button id="presentation-prev" type="button">←</button><button id="presentation-next" type="button">Next →</button><button id="presentation-close" type="button" aria-label="Exit presentation mode">×</button>
+    </div>
+  </main>
+
+  <dialog class="contract-dialog" id="contract-dialog">
+    <button type="button" id="contract-close" aria-label="Close integration contract">×</button>
+    <span class="section-label">PRODUCTION DATA CONTRACT</span>
+    <h2>What must be connected</h2>
+    <ol><li><strong>Satellite exports</strong><span>Dated HCHO and NO₂ products with QA filters and spatial metadata.</span></li><li><strong>Weather inputs</strong><span>Temperature, humidity, wind speed and direction with units and timestamps.</span></li><li><strong>Ground reference</strong><span>Documented station AQI for training, holdout validation and comparison.</span></li><li><strong>Versioned models</strong><span>Random Forest or XGBoost artifacts with their exact feature schema.</span></li><li><strong>Evaluation evidence</strong><span>MAE, RMSE, R² and calibrated reliability outputs.</span></li></ol>
+  </dialog>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+  <script src="v2.js"></script>
+</body>
+</html>

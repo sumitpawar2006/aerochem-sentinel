@@ -1,0 +1,46 @@
+{
+  "metadata": {
+    "region": "Malegaon, Nashik, Maharashtra",
+    "scenarioDate": "2026-08-08T16:00:00+05:30",
+    "status": "demo",
+    "label": "Demonstration model output",
+    "observedSource": null,
+    "modelArtifact": null
+  },
+  "observed": {
+    "aqi": null,
+    "stations": []
+  },
+  "predicted": {
+    "aqi": 218,
+    "category": "Poor",
+    "confidenceInterval": null,
+    "reliability": null
+  },
+  "modelEvaluation": {
+    "mae": null,
+    "rmse": null,
+    "r2": null
+  },
+  "timeline": [
+    {"label":"-24 h","date":"2026-08-07T16:00:00+05:30","aqi":184,"hchoIndex":62,"windKmh":3.1},
+    {"label":"-21 h","date":"2026-08-07T19:00:00+05:30","aqi":191,"hchoIndex":65,"windKmh":2.8},
+    {"label":"-18 h","date":"2026-08-07T22:00:00+05:30","aqi":203,"hchoIndex":69,"windKmh":2.4},
+    {"label":"-15 h","date":"2026-08-08T01:00:00+05:30","aqi":197,"hchoIndex":67,"windKmh":2.7},
+    {"label":"-12 h","date":"2026-08-08T04:00:00+05:30","aqi":211,"hchoIndex":73,"windKmh":2.2},
+    {"label":"-9 h","date":"2026-08-08T07:00:00+05:30","aqi":206,"hchoIndex":71,"windKmh":2.5},
+    {"label":"-6 h","date":"2026-08-08T10:00:00+05:30","aqi":224,"hchoIndex":80,"windKmh":1.9},
+    {"label":"Now","date":"2026-08-08T16:00:00+05:30","aqi":218,"hchoIndex":78,"windKmh":2.1}
+  ],
+  "seasonalComparison": {
+    "winter": {"aqi":212,"hchoIndex":78,"no2Index":70,"status":"demo"},
+    "summer": {"aqi":168,"hchoIndex":74,"no2Index":56,"status":"demo"},
+    "monsoon": {"aqi":104,"hchoIndex":42,"no2Index":38,"status":"demo"}
+  },
+  "hotspots": [
+    {"id":"demo-01","name":"Textile Cluster Scenario","lat":20.5608,"lng":74.5182,"aqi":238,"category":"Poor","hcho":"5.6 × 10⁻⁴ mol/m²","no2":"9.8 × 10⁻⁵ mol/m²","source":"Industrial / textile activity — heuristic"},
+    {"id":"demo-02","name":"Industrial Belt Scenario","lat":20.5482,"lng":74.5358,"aqi":218,"category":"Poor","hcho":"5.1 × 10⁻⁴ mol/m²","no2":"9.5 × 10⁻⁵ mol/m²","source":"Industrial activity — heuristic"},
+    {"id":"demo-03","name":"Traffic Corridor Scenario","lat":20.5716,"lng":74.5015,"aqi":196,"category":"Moderate","hcho":"4.5 × 10⁻⁴ mol/m²","no2":"10.4 × 10⁻⁵ mol/m²","source":"Traffic activity — heuristic"},
+    {"id":"demo-04","name":"Peri-urban Edge Scenario","lat":20.5368,"lng":74.4967,"aqi":174,"category":"Moderate","hcho":"4.2 × 10⁻⁴ mol/m²","no2":"7.7 × 10⁻⁵ mol/m²","source":"Mixed activity / possible biomass burning — heuristic"}
+  ]
+}

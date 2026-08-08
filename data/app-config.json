@@ -1,0 +1,30 @@
+{
+  "region": {
+    "name": "Malegaon, Nashik, Maharashtra",
+    "center": [20.5576062, 74.5246514],
+    "zoom": 13,
+    "searchViewbox": [74.3091148, 20.8349688, 74.8127559, 20.3442422],
+    "osmBoundaryRelation": 10345577
+  },
+  "environmentalDataUrl": "data/environmental-snapshot.json",
+  "liveAirQuality": {
+    "enabled": true,
+    "endpoint": "/api/live-aqi",
+    "domain": "cams_global",
+    "indexScale": "US AQI",
+    "provider": "Open-Meteo / Copernicus CAMS Global",
+    "spatialResolutionKm": 45
+  },
+  "reportEndpoint": "/api/report",
+  "reportStatusEndpoint": "/api/report/status",
+  "satelliteBasemap": {
+    "provider": "Esri World Imagery",
+    "type": "real_imagery_basemap",
+    "note": "Reference imagery only; not a Sentinel-5P pollution product"
+  },
+  "pollutantRaster": {
+    "hchoTileUrl": null,
+    "no2TileUrl": null,
+    "status": "not_connected"
+  }
+}
