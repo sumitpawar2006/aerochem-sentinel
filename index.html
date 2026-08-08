@@ -17,7 +17,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="">
-  <link rel="stylesheet" href="v2.css?v=20260808-8">
+  <link rel="stylesheet" href="v2.css?v=20260808-9">
 </head>
 <body>
   <a class="skip-link" href="#map">Skip to map</a>
@@ -104,7 +104,7 @@
       <button class="demo-layer" type="button" data-layer="demo" hidden><i>◉</i><span>Demo AQI</span><small>MODEL DEMO</small></button>
     </section>
 
-    <aside class="inspector open" id="inspector" aria-label="Map intelligence panel">
+    <aside class="inspector" id="inspector" aria-label="Map intelligence panel">
       <div class="inspector-handle" aria-hidden="true"></div>
       <div class="inspector-head">
         <div><span class="eyebrow" id="inspector-kicker">SITUATION INTELLIGENCE</span><h2 id="inspector-title">Evidence before claims</h2></div>
@@ -112,6 +112,15 @@
       </div>
 
       <div class="inspector-body mode-panel" id="situation-panel">
+        <section class="judge-summary" aria-label="Ideathon evidence summary">
+          <span>IDEATHON EVIDENCE CHECK</span>
+          <h3>Useful now. Honest about what comes next.</h3>
+          <div>
+            <article><small>WORKS NOW</small><strong>Satellite map, modeled AQI and weather</strong></article>
+            <article><small>DECISION</small><strong>First-sensor site and action sandbox</strong></article>
+            <article><small>NEXT PILOT</small><strong>12 weeks · one calibrated sensor</strong></article>
+          </div>
+        </section>
         <span class="section-label">OBSERVED VS PREDICTED</span>
         <div class="comparison-block">
           <div class="comparison-side observed"><span>OBSERVED AQI</span><strong id="observed-aqi">—</strong><small>Ground station not connected</small></div>
@@ -184,7 +193,7 @@
         <div class="mini-chart"><svg id="compare-chart" viewBox="0 0 340 150" role="img" aria-label="Demo AQI timeline"></svg></div>
         <div class="time-selection"><span>00:00</span><input type="range" id="compare-time" min="0" max="7" value="7"><span>Now</span></div>
         <div class="compare-readout"><div><span>Selected AQI</span><strong id="compare-aqi">—</strong></div><div><span>PM₂.₅</span><strong id="compare-hcho">—</strong></div><div><span>PM₁₀</span><strong id="compare-wind">—</strong></div></div>
-        <div class="season-compare"><span class="section-label">SEASONAL MAP PROFILE</span><div class="analysis-switch"><button class="active" type="button" data-season="winter">Winter</button><button type="button" data-season="summer">Summer</button><button type="button" data-season="monsoon">Monsoon</button></div><div class="season-readout"><span>Map overlay profile</span><strong id="season-readout">Winter · AQI 212 · HCHO index 78</strong><small>Demonstration comparison</small></div></div>
+        <div class="season-compare"><span class="section-label">SEASONAL SCENARIO · NOT MEASURED</span><div class="analysis-switch"><button class="active" type="button" data-season="winter">Winter</button><button type="button" data-season="summer">Summer</button><button type="button" data-season="monsoon">Monsoon</button></div><div class="season-readout"><span>Illustrative planning profile</span><strong id="season-readout">Winter scenario · AQI 212 · HCHO index 78</strong><small>Demonstration only · source data required</small></div></div>
         <div class="honesty-note"><i>i</i><p id="trends-note">The AQI timeline uses current atmospheric model output, not a ground-station observation. Seasonal profiles remain demonstration data.</p></div>
       </div>
 
@@ -251,6 +260,13 @@
       <span class="timeline-state">DEMO WHEN AQI LAYER IS ON</span>
     </section>
 
+    <nav class="mobile-mode-nav" aria-label="Mobile workspace modes">
+      <button class="active" type="button" data-mode="situation"><span>01</span><b>Situation</b></button>
+      <button type="button" data-mode="investigate"><span>02</span><b>Investigate</b></button>
+      <button type="button" data-mode="trends"><span>03</span><b>Trends</b></button>
+      <button type="button" data-mode="method"><span>04</span><b>Method</b></button>
+    </nav>
+
     <div class="map-statusbar">
       <span><i class="live-dot"></i> LIVE MAP DATA</span>
       <span id="visible-layer-status">Places · OpenStreetMap</span>
@@ -266,11 +282,11 @@
 
     <button class="assistant-launcher" id="assistant-launcher" type="button"><span>✦</span><strong>Sentinel Assistant</strong><i></i></button>
     <aside class="assistant-panel" id="assistant-panel" aria-label="General AI and map assistant">
-      <div class="assistant-head"><div><span>✦</span><p><strong>Sentinel AI</strong><small id="assistant-subtitle">General AI · map-aware</small></p><em class="assistant-ai-status" id="assistant-ai-status">PROJECT MODE</em></div><button id="assistant-close" type="button" aria-label="Close assistant">×</button></div>
+      <div class="assistant-head"><div><span>✦</span><p><strong>Sentinel AI</strong><small id="assistant-subtitle">Evidence assistant · map-aware</small></p><em class="assistant-ai-status" id="assistant-ai-status">PROJECT MODE</em></div><button id="assistant-close" type="button" aria-label="Close assistant">×</button></div>
       <div class="assistant-messages" id="assistant-messages" aria-live="polite">
-        <div class="assistant-message bot"><span>✦</span><p>Ask me anything. I understand likely spelling mistakes, Marathi, Hindi and English, and I can also explain this map, prepare reports and send them securely.</p></div>
+        <div class="assistant-message bot"><span>✦</span><p>Ask about this project, the map evidence or the pilot plan. On the public site I work in project mode; general AI and direct email require the secure server.</p></div>
       </div>
-      <div class="assistant-prompts"><button type="button" data-prompt="summary">Summarize situation</button><button type="button" data-prompt="What can you help me with?">Ask anything</button><button type="button" data-prompt="report">Create report</button><button type="button" data-prompt="email">Email report</button></div>
+      <div class="assistant-prompts"><button type="button" data-prompt="summary">Summarize situation</button><button type="button" data-prompt="What can you help me with?">Project help</button><button type="button" data-prompt="report">Create report</button><button type="button" data-prompt="email">Email report</button></div>
       <form class="assistant-form" id="assistant-form"><label class="sr-only" for="assistant-input">Message Sentinel AI</label><input id="assistant-input" placeholder="Ask anything — spelling mistakes are okay"><button type="submit">↑</button></form>
       <div class="email-composer" id="email-composer" hidden><label for="report-email" id="report-email-label">Gmail recipient</label><input id="report-email" type="email" placeholder="team@gmail.com"><button id="send-email-report" type="button">Send secure report</button><p id="email-service-note">Requires one-time secure Gmail setup. Credentials never enter this page.</p></div>
     </aside>
@@ -288,6 +304,6 @@
   </dialog>
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
-  <script src="v2.js?v=20260808-11"></script>
+  <script src="v2.js?v=20260808-12"></script>
 </body>
 </html>

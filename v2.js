@@ -110,11 +110,11 @@
   ];
 
   const presentationSteps = [
-    ["situation", "01 · Frame the problem", "The team PDFs focus on HCHO and the monitoring gap, while the dashboard clearly shows that the Sentinel-5P pollutant raster is still pending."],
-    ["situation", "02 · Show live evidence", "Real satellite geography, CAMS modeled AQI and current meteorology establish what is connected today."],
-    ["situation", "03 · Recommend", "A transparent planning score identifies the strongest first monitoring location."],
-    ["trends", "04 · Test an action", "An intervention sandbox compares one pollution-reduction assumption without claiming a forecast."],
-    ["method", "05 · Prove the pathway", "The PDF-derived ML pipeline, evidence gaps, 12-week pilot, cost model and community outcomes complete the proposal."]
+    ["situation", "01 · Define the gap", "Malegaon needs local evidence. We show the live model honestly and never present it as a ground observation."],
+    ["situation", "02 · Show what works", "Real satellite geography, current CAMS modeled AQI and live weather establish the evidence available today."],
+    ["situation", "03 · Make a decision", "A transparent planning score recommends the strongest first monitoring location—and labels it as a scenario."],
+    ["trends", "04 · Test one action", "The sandbox compares a pollution-reduction assumption without pretending that it is a causal forecast."],
+    ["method", "05 · Prove feasibility", "One sensor, a 12-week pilot and an editable ₹1.86 lakh planning budget create a credible path from prototype to validation."]
   ];
 
   const state = {
@@ -1025,7 +1025,7 @@
     const season = state.environmental.seasonalComparison?.[key];
     if (!season) return;
     $$("[data-season]").forEach(button => button.classList.toggle("active", button.dataset.season === key));
-    $("#season-readout").textContent = `${key[0].toUpperCase()}${key.slice(1)} · AQI ${season.aqi} · HCHO index ${season.hchoIndex}`;
+    $("#season-readout").textContent = `${key[0].toUpperCase()}${key.slice(1)} scenario · AQI ${season.aqi} · HCHO index ${season.hchoIndex}`;
     showToast(`${key[0].toUpperCase()}${key.slice(1)} demonstration profile selected for map comparison.`);
     if (!state.demoEnabled) toggleDemo(true);
   }
@@ -1410,6 +1410,7 @@
     $("#presentation-step").textContent = `${String(state.presentationIndex + 1).padStart(2, "0")} / ${String(presentationSteps.length).padStart(2, "0")}`;
     $("#presentation-title").textContent = step[1];
     $("#presentation-copy").textContent = step[2];
+    $("#presentation-next").textContent = state.presentationIndex === presentationSteps.length - 1 ? "Finish" : "Next →";
     setMode(step[0]);
     if (state.presentationIndex === 0) {
       $("#situation-panel").scrollTop = $(".domain-brief").offsetTop - 10;
@@ -1428,6 +1429,13 @@
     if (state.presentationIndex === 4) {
       $("#method-panel").scrollTop = $(".blueprint-module").offsetTop - 10;
     }
+  }
+
+  function setPresentationActive(active) {
+    document.body.classList.toggle("presentation-active", active);
+    $("#presentation-bar").hidden = !active;
+    $("#present-button").classList.toggle("active", active);
+    if (active) $("#assistant-panel").classList.remove("open");
   }
 
   async function sharePublicApp() {
@@ -1554,13 +1562,13 @@
     $("#send-email-report").addEventListener("click", sendEmailReport);
 
     $("#language-button").addEventListener("click", () => setLanguage(state.language === "en" ? "mr" : "en"));
-    $("#present-button").addEventListener("click", () => { state.presentationIndex = 0; $("#presentation-bar").hidden = false; renderPresentation(); });
-    $("#presentation-close").addEventListener("click", () => $("#presentation-bar").hidden = true);
+    $("#present-button").addEventListener("click", () => { state.presentationIndex = 0; setPresentationActive(true); renderPresentation(); });
+    $("#presentation-close").addEventListener("click", () => setPresentationActive(false));
     $("#presentation-prev").addEventListener("click", () => { state.presentationIndex = Math.max(0, state.presentationIndex - 1); renderPresentation(); });
-    $("#presentation-next").addEventListener("click", () => { if (state.presentationIndex < presentationSteps.length - 1) { state.presentationIndex += 1; renderPresentation(); } else $("#presentation-bar").hidden = true; });
+    $("#presentation-next").addEventListener("click", () => { if (state.presentationIndex < presentationSteps.length - 1) { state.presentationIndex += 1; renderPresentation(); } else setPresentationActive(false); });
 
     document.addEventListener("keydown", event => {
-      if (event.key === "Escape") { $("#search-results").classList.remove("open"); $("#assistant-panel").classList.remove("open"); $("#presentation-bar").hidden = true; }
+      if (event.key === "Escape") { $("#search-results").classList.remove("open"); $("#assistant-panel").classList.remove("open"); setPresentationActive(false); }
     });
   }
 
@@ -1573,6 +1581,7 @@
     initMap();
     renderDecisionUi();
     bindEvents();
+    if (window.matchMedia("(min-width: 901px)").matches) $("#inspector").classList.add("open");
     await Promise.all([loadLiveAirQuality(), loadLiveWeather(), loadMailServiceStatus(), loadAiServiceStatus()]);
     updateEnvironmentalUi();
     state.reportContext = null;

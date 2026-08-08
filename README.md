@@ -47,8 +47,9 @@ Use `server.py`, not `python -m http.server`: the included server supplies the l
 - Before/after and seasonal scenario comparison
 - Downloadable, print-ready one-page HTML reports
 - English/Marathi navigation support and an integrated presentation mode
-- Sentinel AI for general web-aware questions, typo-tolerant multilingual chat, evidence summaries, reports, and Gmail delivery
-- Desktop, tablet, and mobile layouts
+- Project-evidence assistant on the public site, with optional server-powered general AI and Gmail delivery
+- Mobile-first map view with four thumb-friendly workspace tabs, a compact live-AQI card, and full-height evidence sheets
+- Desktop and tablet layouts
 
 ## One-click Gmail report delivery
 
