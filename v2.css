@@ -426,3 +426,55 @@ button:focus-visible, input:focus-visible, a:focus-visible { outline: 2px solid 
   .situation-card { width: 245px; }.situation-top { display: none; }.aqi-empty, .aqi-demo { margin: 0; }.base-switcher { top: 68px; }
   .layer-dock { bottom: 114px; }.map-timeline { bottom: 62px; }.mobile-mode-nav { height: 56px; }.inspector, .assistant-panel { bottom: 56px; height: calc(100% - 62px); }
 }
+
+/* Participant Judge Kit */
+.judge-kit-button { height: 32px; padding: 0 10px; border: 1px solid #b76a28; background: #fff8ee; color: #8e4d19; font-size: 7px; font-weight: 700; cursor: pointer; }
+.judge-kit-button span { margin-right: 4px; color: #c46e26; }
+.is-offline .connection i { background: var(--amber); box-shadow: 0 0 0 3px rgba(233,167,58,.16); }
+.judge-dialog { width: min(1060px, calc(100% - 28px)); max-height: calc(100% - 28px); margin: auto; padding: 0; border: 1px solid rgba(17,24,22,.2); background: #f7f8f3; color: var(--ink); box-shadow: 0 32px 120px rgba(7,14,11,.34); overflow-y: auto; }
+.judge-dialog::backdrop { background: rgba(8,14,12,.62); backdrop-filter: blur(7px); }
+.judge-dialog-close { position: sticky; z-index: 3; float: right; top: 14px; right: 14px; width: 36px; height: 36px; margin: 14px 14px -50px 0; border: 1px solid rgba(255,255,255,.2); background: transparent; color: white; font-size: 20px; cursor: pointer; }
+.judge-dialog-head { padding: 34px 72px 30px 34px; background: var(--charcoal); color: white; }
+.judge-dialog-head > span, .judge-section-heading > span, .judge-share-card > div > span, .judge-proof-card > span { color: var(--signal); font-size: 8px; font-weight: 700; letter-spacing: .16em; }
+.judge-dialog-head h2 { margin: 8px 0; font: 700 38px/1.05 "Manrope",sans-serif; letter-spacing: -.055em; }
+.judge-dialog-head p { max-width: 660px; margin: 0; color: rgba(255,255,255,.67); font-size: 12px; line-height: 1.55; }
+.judge-dialog-grid { display: grid; grid-template-columns: .9fr 1.1fr; gap: 1px; background: var(--line); }
+.judge-share-card, .judge-proof-card { padding: 28px; background: #fbfcf8; }
+.judge-share-card { display: grid; grid-template-columns: 148px 1fr; align-items: center; gap: 22px; }
+.judge-share-card img { width: 148px; height: 148px; padding: 7px; border: 1px solid var(--line); background: white; }
+.judge-share-card h3, .judge-proof-card h3, .judge-section-heading h3 { margin: 7px 0; font: 700 20px/1.15 "Manrope",sans-serif; letter-spacing: -.04em; }
+.judge-share-card a { display: block; overflow: hidden; color: var(--green-dark); font-size: 10px; font-weight: 600; text-overflow: ellipsis; white-space: nowrap; }
+.judge-share-actions { grid-column: 1 / -1; display: grid; grid-template-columns: .7fr 1.3fr; gap: 7px; }
+.judge-share-actions button, #judge-backup-demo { min-height: 43px; padding: 9px 12px; border: 1px solid var(--charcoal); background: transparent; color: var(--ink); font-size: 10px; font-weight: 700; cursor: pointer; }
+.judge-share-actions button:last-child { background: var(--charcoal); color: white; }
+.judge-proof-card ul { list-style: none; margin: 16px 0; padding: 0; border: 1px solid var(--line); }
+.judge-proof-card li { display: grid; grid-template-columns: 58px 1fr; gap: 10px; align-items: start; padding: 11px; background: white; }.judge-proof-card li + li { border-top: 1px solid var(--line); }
+.judge-proof-card em { color: var(--green-dark); font-size: 8px; font-style: normal; font-weight: 700; letter-spacing: .08em; }
+.judge-proof-card p { margin: 0; color: var(--ink-soft); font-size: 9px; line-height: 1.45; }.judge-proof-card strong { display: block; margin-bottom: 2px; color: var(--ink); font-size: 10px; }
+#judge-backup-demo { width: 100%; border-color: #a96225; background: #fff7eb; color: #8d4a16; }
+.judge-pitch, .judge-questions { padding: 28px; border-top: 1px solid var(--line); background: #f7f8f3; }
+.judge-section-heading > span { color: var(--green-dark); }.judge-section-heading h3 { margin-bottom: 17px; }
+.judge-pitch ol { list-style: none; display: grid; grid-template-columns: repeat(5,1fr); gap: 1px; margin: 0; padding: 0; background: var(--line); }
+.judge-pitch li { min-height: 142px; padding: 15px; background: white; }.judge-pitch time { color: var(--green-dark); font-size: 9px; font-weight: 700; }.judge-pitch p { margin: 10px 0 0; color: var(--ink-soft); font-size: 10px; line-height: 1.5; }.judge-pitch strong { display: block; margin-bottom: 4px; color: var(--ink); font-size: 12px; }
+.judge-questions { padding-top: 22px; }.judge-questions details { border-top: 1px solid var(--line); background: white; }.judge-questions details:last-child { border-bottom: 1px solid var(--line); }
+.judge-questions summary { padding: 15px; color: var(--ink); font-size: 11px; font-weight: 700; cursor: pointer; }.judge-questions details p { margin: 0; padding: 0 15px 16px; color: var(--ink-soft); font-size: 10px; line-height: 1.6; }
+
+@media (max-width: 1180px) {
+  .judge-kit-button { width: 32px; padding: 0; font-size: 0; }.judge-kit-button span { margin: 0; font-size: 10px; }
+}
+
+@media (max-width: 760px) {
+  .judge-kit-button { width: 36px; height: 36px; }
+  .judge-dialog { width: 100%; max-height: 100%; height: 100%; border: 0; }
+  .judge-dialog-head { padding: 28px 58px 24px 20px; }.judge-dialog-head h2 { font-size: 30px; }.judge-dialog-head p { font-size: 12px; }
+  .judge-dialog-grid { grid-template-columns: 1fr; }.judge-share-card, .judge-proof-card, .judge-pitch, .judge-questions { padding: 20px; }
+  .judge-share-card { grid-template-columns: 112px 1fr; gap: 16px; }.judge-share-card img { width: 112px; height: 112px; }.judge-share-card h3, .judge-proof-card h3, .judge-section-heading h3 { font-size: 18px; }
+  .judge-share-actions { grid-template-columns: 1fr; }.judge-share-actions button, #judge-backup-demo { min-height: 46px; font-size: 12px; }
+  .judge-proof-card li { grid-template-columns: 62px 1fr; padding: 13px; }.judge-proof-card em { font-size: 9px; }.judge-proof-card p { font-size: 11px; }.judge-proof-card strong { font-size: 12px; }
+  .judge-pitch ol { grid-template-columns: 1fr; }.judge-pitch li { min-height: 0; display: grid; grid-template-columns: 68px 1fr; gap: 10px; padding: 14px; }.judge-pitch p { margin: 0; font-size: 12px; }.judge-pitch time { font-size: 10px; }.judge-pitch strong { font-size: 13px; }
+  .judge-questions summary { padding: 16px 13px; font-size: 13px; }.judge-questions details p { padding: 0 13px 16px; font-size: 12px; }
+}
+
+@media (max-width: 420px) {
+  .judge-dialog-head h2 { font-size: 26px; }.judge-share-card { grid-template-columns: 92px 1fr; }.judge-share-card img { width: 92px; height: 92px; }.judge-share-card a { font-size: 9px; }
+}

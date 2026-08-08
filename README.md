@@ -49,6 +49,8 @@ Use `server.py`, not `python -m http.server`: the included server supplies the l
 - English/Marathi navigation support and an integrated presentation mode
 - Project-evidence assistant on the public site, with optional server-powered general AI and Gmail delivery
 - Mobile-first map view with four thumb-friendly workspace tabs, a compact live-AQI card, and full-height evidence sheets
+- Participant Judge Kit with a public-link QR code, 90-second run of show, difficult-question answers, and a labelled backup-demo control
+- Installable web-app manifest and cached local shell for a safer repeat demo after the first online visit
 - Desktop and tablet layouts
 
 ## One-click Gmail report delivery
@@ -100,6 +102,7 @@ The key is entered in a hidden prompt and encrypted for the current Windows user
 - `index.html` — application shell
 - `v2.css` — complete responsive visual system
 - `v2.js` — map, live data, decision tools, reports, and assistant
+- `manifest.webmanifest`, `icon.svg`, and `service-worker.js` — installable/offline-safe participant demo shell
 - `server.py` — static server, live-AQI proxy, and Gmail endpoint
 - `setup-gmail.ps1` — one-time encrypted Windows Gmail setup and launcher
 - `setup-ai.ps1` — one-time encrypted Windows OpenAI setup

@@ -1400,6 +1400,7 @@
     });
     $("#location-query").placeholder = dictionary.searchPlaceholder;
     $("#language-button").textContent = language === "en" ? "EN / मराठी" : "मराठी / EN";
+    updateConnectivity(false);
     if (!state.demoEnabled) $("#demo-button strong").textContent = dictionary.demoButton;
     showToast(language === "mr" ? "मराठी इंटरफेस सक्रिय केला." : "English interface enabled.");
     if (state.currentMode === "investigate" && state.categoryData[state.activeCategory]) renderLocationList(state.categoryData[state.activeCategory], state.activeCategory);
@@ -1436,6 +1437,27 @@
     $("#presentation-bar").hidden = !active;
     $("#present-button").classList.toggle("active", active);
     if (active) $("#assistant-panel").classList.remove("open");
+  }
+
+  function startJudgePitch() {
+    if ($("#judge-dialog").open) $("#judge-dialog").close();
+    state.presentationIndex = 0;
+    setPresentationActive(true);
+    renderPresentation();
+  }
+
+  function updateConnectivity(announce = false) {
+    const online = navigator.onLine;
+    document.body.classList.toggle("is-offline", !online);
+    $("#connection-label").textContent = online
+      ? translations[state.language].mapOnline
+      : (state.language === "mr" ? "ऑफलाइन डेमो तयार" : "OFFLINE DEMO READY");
+    if (announce) showToast(online ? "Connection restored. Live services are available again." : "Connection lost. The cached dashboard and labelled backup scenario remain available.", 5200);
+  }
+
+  function registerOfflineShell() {
+    if (!("serviceWorker" in navigator)) return;
+    navigator.serviceWorker.register("service-worker.js").catch(error => console.warn("Offline shell unavailable", error));
   }
 
   async function sharePublicApp() {
@@ -1497,6 +1519,19 @@
     });
     $("#region-button").addEventListener("click", () => { state.map.flyTo(state.config.region.center, state.config.region.zoom, { duration: .7 }); showToast("Malegaon is the only data-enabled region in this build."); });
     $("#share-button").addEventListener("click", sharePublicApp);
+    $("#judge-kit-button").addEventListener("click", () => $("#judge-dialog").showModal());
+    $("#judge-dialog-close").addEventListener("click", () => $("#judge-dialog").close());
+    $("#judge-copy-link").addEventListener("click", sharePublicApp);
+    $("#judge-start-pitch").addEventListener("click", startJudgePitch);
+    $("#judge-backup-demo").addEventListener("click", () => {
+      $("#judge-dialog").close();
+      toggleDemo(true);
+      $("#inspector").classList.remove("open");
+      showToast("Backup scenario is running and clearly labelled MODEL DEMO.", 5000);
+    });
+    $("#judge-dialog").addEventListener("click", event => { if (event.target === $("#judge-dialog")) $("#judge-dialog").close(); });
+    window.addEventListener("online", () => updateConnectivity(true));
+    window.addEventListener("offline", () => updateConnectivity(true));
 
     $("#map-time").addEventListener("input", event => updateTimeline(Number(event.target.value)));
     $("#compare-time").addEventListener("input", event => updateTimeline(Number(event.target.value)));
@@ -1562,7 +1597,7 @@
     $("#send-email-report").addEventListener("click", sendEmailReport);
 
     $("#language-button").addEventListener("click", () => setLanguage(state.language === "en" ? "mr" : "en"));
-    $("#present-button").addEventListener("click", () => { state.presentationIndex = 0; setPresentationActive(true); renderPresentation(); });
+    $("#present-button").addEventListener("click", startJudgePitch);
     $("#presentation-close").addEventListener("click", () => setPresentationActive(false));
     $("#presentation-prev").addEventListener("click", () => { state.presentationIndex = Math.max(0, state.presentationIndex - 1); renderPresentation(); });
     $("#presentation-next").addEventListener("click", () => { if (state.presentationIndex < presentationSteps.length - 1) { state.presentationIndex += 1; renderPresentation(); } else setPresentationActive(false); });
@@ -1581,6 +1616,8 @@
     initMap();
     renderDecisionUi();
     bindEvents();
+    updateConnectivity(false);
+    registerOfflineShell();
     if (window.matchMedia("(min-width: 901px)").matches) $("#inspector").classList.add("open");
     await Promise.all([loadLiveAirQuality(), loadLiveWeather(), loadMailServiceStatus(), loadAiServiceStatus()]);
     updateEnvironmentalUi();

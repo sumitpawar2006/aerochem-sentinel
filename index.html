@@ -4,6 +4,8 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#f2f4ef">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate">
   <meta name="description" content="AeroChem Sentinel — map-first environmental intelligence for Malegaon.">
   <meta property="og:type" content="website">
@@ -12,12 +14,14 @@
   <meta property="og:url" content="https://sumitpawar2006.github.io/aerochem-sentinel/">
   <meta name="twitter:card" content="summary">
   <link rel="canonical" href="https://sumitpawar2006.github.io/aerochem-sentinel/">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icon.svg" type="image/svg+xml">
   <title>AeroChem Sentinel · Malegaon Map Intelligence</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="">
-  <link rel="stylesheet" href="v2.css?v=20260808-9">
+  <link rel="stylesheet" href="v2.css?v=20260808-10">
 </head>
 <body>
   <a class="skip-link" href="#map">Skip to map</a>
@@ -37,9 +41,10 @@
     </nav>
 
     <div class="header-status">
-      <span class="connection"><i></i> MAP ONLINE</span>
+      <span class="connection"><i></i><span id="connection-label">MAP ONLINE</span></span>
       <button class="language-button" id="language-button" type="button" aria-label="Switch between English and Marathi">EN / मराठी</button>
       <button class="share-button" id="share-button" type="button" aria-label="Share the public team link"><span>↗</span> Share</button>
+      <button class="judge-kit-button" id="judge-kit-button" type="button"><span>★</span> Judge Kit</button>
       <button class="present-button" id="present-button" type="button"><span>▶</span> Present</button>
       <button class="region-button" type="button" id="region-button">
         <span>REGION</span><strong>Malegaon, Nashik</strong><i>⌄</i>
@@ -303,7 +308,56 @@
     <ol><li><strong>Satellite exports</strong><span>Dated HCHO and NO₂ products with QA filters and spatial metadata.</span></li><li><strong>Weather inputs</strong><span>Temperature, humidity, wind speed and direction with units and timestamps.</span></li><li><strong>Ground reference</strong><span>Documented station AQI for training, holdout validation and comparison.</span></li><li><strong>Versioned models</strong><span>Random Forest or XGBoost artifacts with their exact feature schema.</span></li><li><strong>Evaluation evidence</strong><span>MAE, RMSE, R² and calibrated reliability outputs.</span></li></ol>
   </dialog>
 
+  <dialog class="judge-dialog" id="judge-dialog">
+    <button class="judge-dialog-close" type="button" id="judge-dialog-close" aria-label="Close Judge Kit">×</button>
+    <header class="judge-dialog-head">
+      <span>PARTICIPANT JUDGE KIT</span>
+      <h2>Win the room in 90 seconds.</h2>
+      <p>One shareable link, one honest story and prepared answers for the questions judges are most likely to ask.</p>
+    </header>
+
+    <div class="judge-dialog-grid">
+      <section class="judge-share-card" aria-labelledby="judge-share-title">
+        <img src="https://api.qrserver.com/v1/create-qr-code/?size=240x240&amp;margin=10&amp;data=https%3A%2F%2Fsumitpawar2006.github.io%2Faerochem-sentinel%2F" alt="QR code opening the public AeroChem Sentinel dashboard">
+        <div><span>SCAN THE LIVE DASHBOARD</span><h3 id="judge-share-title">No localhost. No setup.</h3><a href="https://sumitpawar2006.github.io/aerochem-sentinel/" target="_blank" rel="noopener">sumitpawar2006.github.io/aerochem-sentinel</a></div>
+        <div class="judge-share-actions"><button type="button" id="judge-copy-link">Copy link</button><button type="button" id="judge-start-pitch">Start 90-second pitch</button></div>
+      </section>
+
+      <section class="judge-proof-card" aria-labelledby="judge-proof-title">
+        <span>WHAT JUDGES CAN VERIFY</span>
+        <h3 id="judge-proof-title">Evidence, decision and delivery</h3>
+        <ul>
+          <li><em>LIVE</em><p><strong>Real geography and current context</strong>Esri satellite, OpenStreetMap, CAMS modeled AQI and Open-Meteo weather.</p></li>
+          <li><em>DECIDE</em><p><strong>A transparent first action</strong>Sensor-siting score, candidate comparison and pollution-reduction sandbox.</p></li>
+          <li><em>PILOT</em><p><strong>A feasible validation path</strong>One calibrated sensor, 12 weeks, editable ₹1.86 lakh planning budget.</p></li>
+          <li><em>HONEST</em><p><strong>No invented proof</strong>HCHO raster, ground observations and ML metrics remain visibly marked as not connected.</p></li>
+        </ul>
+        <button type="button" id="judge-backup-demo">Run labelled backup demo</button>
+      </section>
+    </div>
+
+    <section class="judge-pitch" aria-labelledby="judge-pitch-title">
+      <div class="judge-section-heading"><span>90-SECOND RUN OF SHOW</span><h3 id="judge-pitch-title">Five moments. One decision story.</h3></div>
+      <ol>
+        <li><time>00–15s</time><p><strong>Problem</strong>Malegaon needs local pollution evidence, but ground monitoring is spatially limited.</p></li>
+        <li><time>15–35s</time><p><strong>Live proof</strong>Show the real map, current modeled AQI, weather, timestamp and resolution.</p></li>
+        <li><time>35–55s</time><p><strong>Decision</strong>Reveal the recommended first sensor site and explain that its score is a planning heuristic.</p></li>
+        <li><time>55–70s</time><p><strong>Action</strong>Test one intervention assumption without calling it a forecast.</p></li>
+        <li><time>70–90s</time><p><strong>Feasibility</strong>Finish with the 12-week pilot, cost, validation metrics and community outcome.</p></li>
+      </ol>
+    </section>
+
+    <section class="judge-questions" aria-labelledby="judge-questions-title">
+      <div class="judge-section-heading"><span>DIFFICULT QUESTIONS</span><h3 id="judge-questions-title">Answer clearly—never defensively.</h3></div>
+      <details open><summary>“Is this real AQI or a sensor reading?”</summary><p>It is current CAMS atmospheric model output delivered through Open-Meteo, labelled with its timestamp and approximately 45-km grid. It is not a ground observation. The pilot adds the calibrated local reference needed for validation.</p></details>
+      <details><summary>“Is the satellite image your HCHO layer?”</summary><p>No. The imagery is a real geographic basemap. Sentinel-5P HCHO is a separate column-density product and remains marked as not connected until a dated, quality-filtered raster is supplied.</p></details>
+      <details><summary>“Why should we trust the recommended sensor location?”</summary><p>It is a transparent planning heuristic using sensitive-site access, source proximity, field access and monitoring gap. The weights and alternatives are visible; field verification is part of weeks 1–2.</p></details>
+      <details><summary>“How will you prove the model works?”</summary><p>Co-locate the sensor for calibration, use time-aware and location-aware holdouts, then publish MAE, RMSE, R², residual checks and confidence evidence. Until then, the dashboard intentionally leaves those values blank.</p></details>
+      <details><summary>“Can this scale beyond Malegaon?”</summary><p>Yes—the interface and data contract are reusable. Scaling requires local boundaries, verified ground reference, dated satellite products and recalibrated model evidence for every new region.</p></details>
+    </section>
+  </dialog>
+
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
-  <script src="v2.js?v=20260808-12"></script>
+  <script src="v2.js?v=20260808-13"></script>
 </body>
 </html>

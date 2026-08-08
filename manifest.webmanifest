@@ -1,0 +1,19 @@
+{
+  "name": "AeroChem Sentinel",
+  "short_name": "AeroChem",
+  "description": "Map-first environmental intelligence and monitoring decisions for Malegaon.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#f2f4ef",
+  "theme_color": "#111816",
+  "icons": [
+    {
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
