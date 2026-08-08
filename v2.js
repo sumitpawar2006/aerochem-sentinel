@@ -962,26 +962,71 @@
     if (showEmail) $("#email-composer").hidden = false;
   }
 
+  function editDistance(first, second) {
+    const previous = Array.from({ length: second.length + 1 }, (_, index) => index);
+    for (let row = 1; row <= first.length; row += 1) {
+      const current = [row];
+      for (let column = 1; column <= second.length; column += 1) {
+        current[column] = Math.min(
+          current[column - 1] + 1,
+          previous[column] + 1,
+          previous[column - 1] + (first[row - 1] === second[column - 1] ? 0 : 1)
+        );
+      }
+      previous.splice(0, previous.length, ...current);
+    }
+    return previous[second.length];
+  }
+
+  function resemblesAny(tokens, targets) {
+    return tokens.some(token => targets.some(target => {
+      if (token === target) return true;
+      const tolerance = target.length >= 5 ? 2 : 1;
+      return Math.abs(token.length - target.length) <= tolerance && editDistance(token, target) <= tolerance;
+    }));
+  }
+
+  function detectAssistantIntent(prompt) {
+    const tokens = prompt.toLocaleLowerCase().normalize("NFKD").replace(/[^a-z0-9\u0900-\u097f]+/g, " ").trim().split(/\s+/).filter(Boolean);
+    const wantsEmail = resemblesAny(tokens, ["email", "gmail", "mail"]);
+    const wantsReport = resemblesAny(tokens, ["report", "reporte"]);
+    const commandToken = tokens.find(token => !["please", "kindly", "can", "could", "would", "you"].includes(token));
+    const wantsSend = Boolean(commandToken) && resemblesAny([commandToken], ["send", "forward", "deliver"]);
+    if ((wantsEmail && (wantsReport || wantsSend)) || (wantsEmail && tokens.length <= 3)) {
+      return { name: "email", autoSend: wantsSend && state.mailService.configured };
+    }
+    if (wantsReport || resemblesAny(tokens, ["download"])) return { name: "report", autoSend: false };
+    if (resemblesAny(tokens, ["summary", "summarize", "summarise"])) return { name: "summary", autoSend: false };
+    if (resemblesAny(tokens, ["confidence", "accuracy", "reliability"])) return { name: "confidence", autoSend: false };
+    if (resemblesAny(tokens, ["map", "location", "satellite"])) return { name: "map", autoSend: false };
+    return { name: "general", autoSend: false };
+  }
+
   async function handleAssistantPrompt(prompt) {
-    const normalized = prompt.toLowerCase();
+    const intent = detectAssistantIntent(prompt);
     addAssistantMessage(prompt, "user");
-    if (["email", "gmail", "email report"].includes(normalized)) {
+    if (intent.name === "email") {
       const report = buildReport();
+      if (intent.autoSend) {
+        addAssistantMessage(`I understood your email request despite the spelling. Sending “${report.title}” now to ${state.mailService.recipient}…`);
+        await sendEmailReport();
+        return;
+      }
       addAssistantMessage(state.mailService.configured
         ? `I prepared “${report.title}”. Click Send below and it will go immediately to ${state.mailService.recipient}.`
         : `I prepared “${report.title}”. Automatic Gmail delivery needs the one-time secure server setup.`);
       $("#email-composer").hidden = false;
-    } else if (["report", "create report", "download report"].includes(normalized)) {
+    } else if (intent.name === "report") {
       const report = buildReport();
       addAssistantMessage(`The one-page report is ready: ${report.title}. I am downloading a printable copy now.`);
       downloadReport();
-    } else if (normalized === "summary") {
+    } else if (intent.name === "summary") {
       addAssistantMessage(buildReport().summary);
     } else if (state.aiService.configured) {
       await askGeneralAi(prompt);
-    } else if (normalized.includes("confidence") || normalized.includes("accuracy")) {
+    } else if (intent.name === "confidence") {
       addAssistantMessage("Model confidence, MAE, RMSE and R² are unavailable. AeroChem Sentinel deliberately does not invent these values.");
-    } else if (normalized.includes("map") || normalized.includes("location")) {
+    } else if (intent.name === "map") {
       addAssistantMessage("The default map is real Esri satellite imagery with real OpenStreetMap locations. CAMS AQI is a live atmospheric model estimate, not a ground sensor reading.");
     } else {
       addAssistantMessage("General AI is not configured on this server yet. Run setup-ai.ps1 once; then I can understand spelling mistakes and answer questions beyond this project. I can still create reports, email them, and explain the current map evidence now.");
