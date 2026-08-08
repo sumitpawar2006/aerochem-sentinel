@@ -14,6 +14,7 @@
       osmBoundaryRelation: 10345577
     },
     environmentalDataUrl: "data/environmental-snapshot.json",
+    decisionModelUrl: "data/decision-model.json",
     nearbyCitiesUrl: "data/nearby-cities.json",
     reportEndpoint: "/api/report",
     reportStatusEndpoint: "/api/report/status",
@@ -27,6 +28,13 @@
     predicted: { aqi: null, confidenceInterval: null, reliability: null },
     modelEvaluation: { mae: null, rmse: null, r2: null },
     timeline: [], seasonalComparison: {}, hotspots: []
+  };
+
+  const fallbackDecisionModel = {
+    metadata: { status: "unavailable", label: "Decision model unavailable", sources: [] },
+    sensorSiting: { coverageRadiusKm: 3, weights: [], candidates: [] },
+    interventions: { defaultIntervention: "traffic", defaultStrength: 60, options: [] },
+    feasibility: { timelineWeeks: 12, costAssumptionsInr: {}, phases: [], communityImpact: [] }
   };
 
   const categoryDefinitions = {
@@ -98,15 +106,16 @@
   ];
 
   const presentationSteps = [
-    ["situation", "Situation first", "Real geography stays separate from unavailable environmental evidence."],
-    ["investigate", "Investigate every mapped place", "Search and inspect real OSM locations without assigning fabricated AQI."],
-    ["trends", "Compare through time", "The permanent timeline and seasonal profiles demonstrate how connected outputs will behave."],
-    ["method", "Finish with accountable AI", "The workflow exposes its evidence, missing metrics and integration contract."]
+    ["situation", "01 · Detect", "Live satellite context and CAMS modeled AQI establish the current evidence."],
+    ["situation", "02 · Recommend", "A transparent planning score identifies the strongest first monitoring location."],
+    ["trends", "03 · Test an action", "An intervention sandbox compares one pollution-reduction assumption without claiming a forecast."],
+    ["method", "04 · Prove feasibility", "A 12-week pilot, adjustable cost model and community outcomes complete the proposal."]
   ];
 
   const state = {
     config: fallbackConfig,
     environmental: fallbackEnvironmentalData,
+    decisionModel: fallbackDecisionModel,
     map: null,
     baseLayers: {},
     currentBase: null,
@@ -115,6 +124,8 @@
     activeCategory: "places",
     boundaryLayer: null,
     coverageLayer: null,
+    sensorLayer: null,
+    simulationLayer: null,
     demoLayer: null,
     demoEnabled: false,
     searchMarker: null,
@@ -129,7 +140,9 @@
     mailService: { configured: false, recipient: "" },
     aiService: { configured: false, model: "local evidence mode" },
     chatHistory: [],
-    nearbyCities: []
+    nearbyCities: [],
+    activeIntervention: "traffic",
+    sensitiveSiteCount: null
   };
 
   async function fetchJson(url, fallback) {
@@ -253,6 +266,7 @@
     $("#live-feed-dot").classList.add("ready");
     $("#live-feed-status").textContent = "CAMS / OPEN-METEO";
     $("#live-aqi-scale").textContent = "US AQI · MODEL";
+    updateInterventionSimulation();
   }
 
   function initMap() {
@@ -299,20 +313,189 @@
     showToast(label);
   }
 
+  function formatInr(value) {
+    return new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 }).format(value || 0);
+  }
+
+  function recommendedSensorCandidate() {
+    const candidates = state.decisionModel.sensorSiting?.candidates || [];
+    return [...candidates].sort((a, b) => b.score - a.score)[0] || null;
+  }
+
+  function renderCommunityImpact() {
+    const impact = state.decisionModel.feasibility?.communityImpact || [];
+    const container = $("#community-impact");
+    if (!container) return;
+    container.innerHTML = impact.map(item => {
+      const value = item.label === "Sensitive sites" && Number.isFinite(state.sensitiveSiteCount)
+        ? `${state.sensitiveSiteCount} mapped within 3 km`
+        : item.value;
+      return `<div><span>${escapeHtml(item.label)}</span><strong>${escapeHtml(value)}</strong></div>`;
+    }).join("");
+  }
+
+  function updateFeasibility() {
+    const feasibility = state.decisionModel.feasibility || {};
+    const assumptions = feasibility.costAssumptionsInr || {};
+    const count = Number($("#pilot-sensor-count")?.value || 1);
+    if ($("#pilot-sensor-count-label")) $("#pilot-sensor-count-label").textContent = count;
+    const perSensor = (assumptions.sensorAllowance || 0) + (assumptions.installationAndCalibration || 0) + (assumptions.connectivityAndMaintenance || 0);
+    const fixed = (assumptions.communityTraining || 0) + (assumptions.softwareLicence || 0);
+    const total = perSensor * count + fixed;
+    if ($("#pilot-budget")) $("#pilot-budget").textContent = formatInr(total);
+    const labels = {
+      sensorAllowance: "Sensor allowance",
+      installationAndCalibration: "Installation + calibration",
+      connectivityAndMaintenance: "Connectivity + maintenance",
+      communityTraining: "Community training",
+      softwareLicence: "Software licence"
+    };
+    if ($("#cost-breakdown")) {
+      $("#cost-breakdown").innerHTML = Object.entries(assumptions).map(([key, value]) => {
+        const multiplied = ["sensorAllowance", "installationAndCalibration", "connectivityAndMaintenance"].includes(key) ? value * count : value;
+        return `<div><span>${escapeHtml(labels[key] || key)}</span><strong>${formatInr(multiplied)}</strong></div>`;
+      }).join("");
+    }
+    renderCommunityImpact();
+  }
+
+  function updateInterventionSimulation() {
+    const interventions = state.decisionModel.interventions || {};
+    const option = interventions.options?.find(item => item.id === state.activeIntervention) || interventions.options?.[0];
+    if (!option) return;
+    const strength = Number($("#intervention-strength")?.value || interventions.defaultStrength || 60);
+    const reduction = option.maxPm25ReductionPct * strength / 100;
+    const baseline = state.liveAir?.current?.pm2_5 ?? state.environmental.timeline?.at(-1)?.pm2_5;
+    const result = Number.isFinite(baseline) ? baseline * (1 - reduction / 100) : null;
+    $$('[data-intervention]').forEach(button => button.classList.toggle("active", button.dataset.intervention === option.id));
+    if ($("#intervention-strength-label")) $("#intervention-strength-label").textContent = `${strength}%`;
+    if ($("#simulation-baseline")) $("#simulation-baseline").textContent = Number.isFinite(baseline) ? `${baseline.toFixed(1)} µg/m³` : "Unavailable";
+    if ($("#simulation-result")) $("#simulation-result").textContent = Number.isFinite(result) ? `${result.toFixed(1)} µg/m³` : "Awaiting live model";
+    if ($("#simulation-change")) $("#simulation-change").textContent = `−${reduction.toFixed(1)}%`;
+    if ($("#simulation-action")) $("#simulation-action").textContent = option.name;
+    if ($("#simulation-implementation")) $("#simulation-implementation").textContent = `${option.description} · ${option.implementation}`;
+    if ($("#simulation-method")) $("#simulation-method").textContent = `At ${strength}% implementation, the sandbox applies ${reduction.toFixed(1)}% of the current modeled PM₂.₅ value. This is an editable planning assumption, not a measured or causal forecast.`;
+  }
+
+  function showSimulationArea() {
+    if (state.simulationLayer && state.map.hasLayer(state.simulationLayer)) {
+      state.map.removeLayer(state.simulationLayer);
+      state.simulationLayer = null;
+      showToast("Planning intervention area hidden.");
+      return;
+    }
+    const option = state.decisionModel.interventions?.options?.find(item => item.id === state.activeIntervention);
+    if (!option) return;
+    const strength = Number($("#intervention-strength")?.value || 60);
+    const radius = 2800 + strength * 22;
+    state.simulationLayer = L.circle(state.config.region.center, {
+      radius, color: "#b9d767", weight: 2, dashArray: "8 6", fillColor: "#b9d767", fillOpacity: .12
+    }).bindTooltip(`${escapeHtml(option.name)} · planning area only`, { className: "location-tooltip" }).addTo(state.map);
+    state.map.fitBounds(state.simulationLayer.getBounds().pad(.12));
+    $("#visible-layer-status").textContent = `${option.name} · planning scenario, not forecast`;
+    showToast("Illustrative intervention area shown. No measured reduction is claimed.", 4600);
+  }
+
+  function showSensorRecommendation(candidateId, compareAll = false) {
+    const siting = state.decisionModel.sensorSiting || {};
+    const candidates = siting.candidates || [];
+    const candidate = candidates.find(item => item.id === candidateId) || recommendedSensorCandidate();
+    if (!candidate || !state.map) return;
+    if (state.sensorLayer && state.map.hasLayer(state.sensorLayer)) state.map.removeLayer(state.sensorLayer);
+    state.sensorLayer = L.layerGroup();
+    const visibleCandidates = compareAll ? candidates : [candidate];
+    visibleCandidates.forEach(item => {
+      const isRecommended = item.id === recommendedSensorCandidate()?.id;
+      const color = isRecommended ? "#b9d767" : "#f2f4ef";
+      const icon = L.divIcon({
+        className: "",
+        html: `<span class="sensor-site-marker ${isRecommended ? "recommended" : ""}"><b>${item.score}</b><small>${isRecommended ? "BEST" : "ALT"}</small></span>`,
+        iconSize: [48, 48], iconAnchor: [24, 24]
+      });
+      L.marker([item.lat, item.lng], { icon, zIndexOffset: 1200 }).bindTooltip(`<strong>${escapeHtml(item.name)}</strong><br>Planning score ${item.score}/100`, { className: "location-tooltip", direction: "top" }).addTo(state.sensorLayer);
+      L.circle([item.lat, item.lng], { radius: (siting.coverageRadiusKm || 3) * 1000, color, weight: isRecommended ? 2 : 1, dashArray: "7 6", fillColor: color, fillOpacity: isRecommended ? .11 : .035, interactive: false }).addTo(state.sensorLayer);
+    });
+    state.sensorLayer.addTo(state.map);
+    const bounds = L.latLngBounds(visibleCandidates.map(item => [item.lat, item.lng]));
+    state.map.fitBounds(bounds.pad(compareAll ? .45 : .8), { maxZoom: compareAll ? 13 : 14 });
+    $('[data-layer="sensor"]')?.classList.add("active");
+    $("#visible-layer-status").textContent = compareAll ? "Sensor-site candidate comparison · planning model" : `${candidate.name} · planning recommendation`;
+    showToast(compareAll ? "Comparing four planning candidates." : "Recommended sensor site shown with a 3 km planning radius.");
+  }
+
+  function toggleSensorLayer(button) {
+    if (state.sensorLayer && state.map.hasLayer(state.sensorLayer)) {
+      state.map.removeLayer(state.sensorLayer);
+      button.classList.remove("active");
+      return;
+    }
+    showSensorRecommendation();
+  }
+
+  async function loadSensitiveSiteEvidence() {
+    const candidate = recommendedSensorCandidate();
+    if (!candidate) return;
+    const radius = state.decisionModel.sensorSiting?.coverageRadiusKm || 3;
+    try {
+      const radiusMeters = radius * 1000;
+      const query = `[out:json][timeout:20];nwr(around:${radiusMeters},${candidate.lat},${candidate.lng})["amenity"~"school|college|university|hospital|clinic|doctors"]["name"];out center tags;`;
+      const sites = await queryOverpassRequest(query, "sensitive");
+      state.sensitiveSiteCount = sites.filter(site => distanceKm(candidate.lat, candidate.lng, site.lat, site.lng) <= radius).length;
+      $("#sensor-sensitive-sites").textContent = `${state.sensitiveSiteCount} mapped`;
+      renderCommunityImpact();
+    } catch (error) {
+      console.warn("Sensitive-site evidence unavailable", error);
+      $("#sensor-sensitive-sites").textContent = "OSM unavailable";
+    }
+  }
+
+  function renderDecisionUi() {
+    const model = state.decisionModel;
+    const siting = model.sensorSiting || {};
+    const best = recommendedSensorCandidate();
+    if (best) {
+      $("#sensor-score").textContent = `${best.score}/100`;
+      $("#sensor-description").textContent = siting.description;
+      $("#sensor-site-name").textContent = best.name;
+      $("#sensor-site-reason").textContent = best.reason;
+      $("#sensor-radius").textContent = `${siting.coverageRadiusKm || 3} km`;
+      $("#sensor-weights").innerHTML = (siting.weights || []).map(item => `<div><span>${escapeHtml(item.label)}</span><strong>${item.weight}%</strong></div>`).join("");
+      $("#sensor-candidates").innerHTML = (siting.candidates || []).map(item => `<button type="button" data-sensor-candidate="${escapeHtml(item.id)}"><span>${item.score}</span><div><strong>${escapeHtml(item.name)}</strong><small>${escapeHtml(item.reason)}</small></div></button>`).join("");
+    }
+
+    const interventions = model.interventions || {};
+    state.activeIntervention = interventions.defaultIntervention || interventions.options?.[0]?.id || "traffic";
+    $("#intervention-description").textContent = interventions.description || "Planning sandbox unavailable.";
+    $("#intervention-strength").value = interventions.defaultStrength || 60;
+    $("#intervention-switch").innerHTML = (interventions.options || []).map(item => `<button type="button" data-intervention="${escapeHtml(item.id)}">${escapeHtml(item.short || item.name)}</button>`).join("");
+
+    const feasibility = model.feasibility || {};
+    $("#feasibility-title").textContent = feasibility.title || "Field pilot";
+    $("#feasibility-description").textContent = feasibility.description || "Planning model unavailable.";
+    $("#pilot-phases").innerHTML = (feasibility.phases || []).map(item => `<div><span>${escapeHtml(item.weeks)}</span><p><strong>${escapeHtml(item.name)}</strong><small>${escapeHtml(item.description)}</small></p></div>`).join("");
+    $("#decision-sources").innerHTML = `<span>REFERENCE PATHWAYS</span>${(model.metadata?.sources || []).map(source => `<a href="${escapeHtml(source.url)}" target="_blank" rel="noopener noreferrer"><strong>${escapeHtml(source.label)}</strong><small>${escapeHtml(source.use)}</small></a>`).join("")}`;
+    renderCommunityImpact();
+    updateFeasibility();
+    updateInterventionSimulation();
+  }
+
   function overpassQueryFor(category) {
     const definition = categoryDefinitions[category];
     return `[out:json][timeout:30];${definition.query(state.config.region.center)}out center tags;`;
   }
 
-  async function queryOverpass(category) {
-    const endpoints = ["https://overpass-api.de/api/interpreter", "https://overpass.kumi.systems/api/interpreter"];
-    const query = overpassQueryFor(category);
+  async function queryOverpassRequest(query, category) {
+    const endpoints = [
+      "https://maps.mail.ru/osm/tools/overpass/api/interpreter",
+      "https://overpass.private.coffee/api/interpreter",
+      "https://overpass-api.de/api/interpreter"
+    ];
     let lastError;
     for (const endpoint of endpoints) {
       const controller = new AbortController();
       const timeout = setTimeout(() => {
         try { controller.abort(); } catch { /* Navigation can dispose the request first. */ }
-      }, 32000);
+      }, 18000);
       try {
         const response = await fetch(endpoint, {
           method: "POST",
@@ -330,6 +513,10 @@
       }
     }
     throw lastError || new Error("OpenStreetMap feature service unavailable");
+  }
+
+  async function queryOverpass(category) {
+    return queryOverpassRequest(overpassQueryFor(category), category);
   }
 
   function normalizeOsmElements(elements, category) {
@@ -666,7 +853,10 @@
       $("#inspector-title").textContent = definition.title;
       if (!state.categoryData[state.activeCategory]) loadCategory(state.activeCategory);
     }
-    if (mode === "trends" && !state.liveAir) showToast("The live timeline is unavailable; seasonal and fallback values are clearly labelled demo.", 3800);
+    if (mode === "trends") {
+      updateInterventionSimulation();
+      if (!state.liveAir) showToast("The live timeline is unavailable; seasonal and fallback values are clearly labelled demo.", 3800);
+    }
   }
 
   function updateEnvironmentalUi() {
@@ -684,6 +874,7 @@
     if (predicted.aqi != null) $("#aqi-demo").querySelector("strong").textContent = predicted.aqi;
     renderCompareChart();
     updateTimeline(Math.max(0, (environmental.timeline || []).length - 1));
+    updateInterventionSimulation();
   }
 
   function renderCompareChart() {
@@ -784,6 +975,10 @@
         ]
       };
     }
+    const bestSensor = recommendedSensorCandidate();
+    const feasibilityCosts = state.decisionModel.feasibility?.costAssumptionsInr || {};
+    const oneSensorBudget = Object.values(feasibilityCosts).reduce((total, value) => total + (Number(value) || 0), 0);
+    const intervention = state.decisionModel.interventions?.options?.find(item => item.id === state.activeIntervention);
     return {
       title: "AeroChem Sentinel — Malegaon Situation Report",
       summary: state.liveAir ? "The real geospatial basemap and a current CAMS global air-quality model feed are online. This is modeled atmospheric data, not a ground-sensor observation; reliability and satellite pollutant rasters remain unavailable." : "The real geospatial basemap is online. The live air-quality model is unavailable; demonstration outputs remain separately labelled.",
@@ -794,7 +989,12 @@
         { label: "Base geography", value: "OpenStreetMap · available" },
         { label: "Observed AQI", value: state.environmental.observed?.aqi ?? "Unavailable" },
         { label: "Predicted AQI", value: state.environmental.predicted?.aqi != null ? `${state.environmental.predicted.aqi} ${state.environmental.predicted.scale || "AQI"} · ${state.environmental.predicted.status === "live_model" ? "LIVE MODEL" : "DEMO"}` : "Unavailable" },
-        { label: "Model reliability", value: state.environmental.predicted?.reliability ?? "Unavailable" }
+        { label: "Model reliability", value: state.environmental.predicted?.reliability ?? "Unavailable" },
+        { label: "Recommended first sensor site", value: bestSensor ? `${bestSensor.name} · planning score ${bestSensor.score}/100` : "Planning model unavailable" },
+        { label: "Sensitive sites within planning radius", value: Number.isFinite(state.sensitiveSiteCount) ? `${state.sensitiveSiteCount} mapped OSM sites` : "Live OSM count unavailable" },
+        { label: "Intervention sandbox", value: intervention ? `${intervention.name} · illustrative scenario, not forecast` : "Unavailable" },
+        { label: "One-sensor year-1 planning budget", value: `${formatInr(oneSensorBudget)} · editable assumption, not quote` },
+        { label: "Pilot timeline", value: `${state.decisionModel.feasibility?.timelineWeeks || 12} weeks` }
       ]
     };
   }
@@ -923,6 +1123,8 @@
 
   function assistantContext() {
     const point = state.environmental.timeline?.[Number($("#map-time")?.value)] || null;
+    const bestSensor = recommendedSensorCandidate();
+    const activeAction = state.decisionModel.interventions?.options?.find(item => item.id === state.activeIntervention);
     return {
       region: state.config.region.name,
       language: state.language,
@@ -932,6 +1134,8 @@
       selectedLocation: state.selectedLocation ? { name: state.selectedLocation.name, type: state.selectedLocation.type, lat: state.selectedLocation.lat, lng: state.selectedLocation.lng } : null,
       selectedHotspot: state.selectedHotspot ? { name: state.selectedHotspot.name, status: "demo" } : null,
       timelinePoint: point ? { date: point.date, aqi: point.aqi, pm2_5: point.pm2_5, pm10: point.pm10 } : null,
+      recommendedSensor: bestSensor ? { name: bestSensor.name, score: bestSensor.score, status: "planning heuristic" } : null,
+      activeIntervention: activeAction ? { name: activeAction.name, status: "illustrative planning scenario" } : null,
       evidenceWarning: "CAMS values are modeled estimates; no verified ground sensor is connected."
     };
   }
@@ -997,6 +1201,9 @@
     }
     if (wantsReport || resemblesAny(tokens, ["download"])) return { name: "report", autoSend: false };
     if (resemblesAny(tokens, ["summary", "summarize", "summarise"])) return { name: "summary", autoSend: false };
+    if (resemblesAny(tokens, ["sensor", "monitor", "station", "siting"])) return { name: "sensor", autoSend: false };
+    if (resemblesAny(tokens, ["simulation", "intervention", "reduction", "traffic", "industry", "burning"])) return { name: "simulation", autoSend: false };
+    if (resemblesAny(tokens, ["cost", "budget", "feasibility", "impact", "pilot"])) return { name: "feasibility", autoSend: false };
     if (resemblesAny(tokens, ["confidence", "accuracy", "reliability"])) return { name: "confidence", autoSend: false };
     if (resemblesAny(tokens, ["map", "location", "satellite"])) return { name: "map", autoSend: false };
     return { name: "general", autoSend: false };
@@ -1022,6 +1229,18 @@
       downloadReport();
     } else if (intent.name === "summary") {
       addAssistantMessage(buildReport().summary);
+    } else if (intent.name === "sensor") {
+      const best = recommendedSensorCandidate();
+      setMode("situation");
+      showSensorRecommendation();
+      addAssistantMessage(best ? `${best.name} is the recommended first sensor site with a planning score of ${best.score}/100. This is a transparent siting heuristic, not an installed or observed station.` : "The sensor-siting model is unavailable.");
+    } else if (intent.name === "simulation") {
+      setMode("trends");
+      updateInterventionSimulation();
+      addAssistantMessage("The pollution-reduction sandbox is open. Its changes are adjustable planning assumptions applied to the current modeled PM₂.₅ value—not a forecast.");
+    } else if (intent.name === "feasibility") {
+      setMode("method");
+      addAssistantMessage(`The field-pilot plan is open: ${state.decisionModel.feasibility?.timelineWeeks || 12} weeks with an adjustable cost model and explicitly labelled community-impact targets.`);
     } else if (state.aiService.configured) {
       await askGeneralAi(prompt);
     } else if (intent.name === "confidence") {
@@ -1085,8 +1304,17 @@
     $("#presentation-title").textContent = step[1];
     $("#presentation-copy").textContent = step[2];
     setMode(step[0]);
-    if (step[0] === "investigate") loadCategory("places", { fit: false });
-    if (step[0] === "trends" && !state.liveAir && !state.demoEnabled) toggleDemo(true);
+    if (state.presentationIndex === 1) {
+      showSensorRecommendation();
+      $("#situation-panel").scrollTop = $(".sensor-decision").offsetTop - 10;
+    }
+    if (state.presentationIndex === 2) {
+      updateInterventionSimulation();
+      $("#trends-panel").scrollTop = 0;
+    }
+    if (state.presentationIndex === 3) {
+      $("#method-panel").scrollTop = $(".feasibility-module").offsetTop - 10;
+    }
   }
 
   function bindEvents() {
@@ -1098,6 +1326,7 @@
       if (categoryDefinitions[layer]) { setMode("investigate"); loadCategory(layer, { fit: true }); }
       else if (layer === "boundary") toggleBoundary(button);
       else if (layer === "coverage") toggleCoverage(button);
+      else if (layer === "sensor") toggleSensorLayer(button);
       else if (layer === "demo") toggleDemo();
     }));
     $$("[data-enable-layer]").forEach(button => button.addEventListener("click", () => {
@@ -1145,6 +1374,25 @@
       if (!state.liveAir && !state.demoEnabled) toggleDemo(true);
     }));
     $$("[data-season]").forEach(button => button.addEventListener("click", () => updateSeason(button.dataset.season)));
+    $$("[data-intervention]").forEach(button => button.addEventListener("click", () => {
+      state.activeIntervention = button.dataset.intervention;
+      updateInterventionSimulation();
+      if (state.simulationLayer && state.map.hasLayer(state.simulationLayer)) {
+        state.map.removeLayer(state.simulationLayer);
+        state.simulationLayer = null;
+      }
+    }));
+    $("#intervention-strength").addEventListener("input", updateInterventionSimulation);
+    $("#show-simulation-map").addEventListener("click", showSimulationArea);
+    $("#pilot-sensor-count").addEventListener("input", updateFeasibility);
+    $("#show-sensor-site").addEventListener("click", () => showSensorRecommendation());
+    $("#compare-sensor-sites").addEventListener("click", () => {
+      const list = $("#sensor-candidates");
+      list.hidden = !list.hidden;
+      $("#compare-sensor-sites").textContent = list.hidden ? "Compare candidates" : "Hide comparison";
+      showSensorRecommendation(undefined, !list.hidden);
+    });
+    $$("[data-sensor-candidate]").forEach(button => button.addEventListener("click", () => showSensorRecommendation(button.dataset.sensorCandidate)));
 
     $$("[data-step]").forEach(button => button.addEventListener("click", () => {
       $$("[data-step]").forEach(item => item.classList.toggle("active", item === button));
@@ -1179,14 +1427,17 @@
   async function init() {
     state.config = await fetchJson("data/app-config.json", fallbackConfig);
     state.environmental = await fetchJson(state.config.environmentalDataUrl, fallbackEnvironmentalData);
+    state.decisionModel = await fetchJson(state.config.decisionModelUrl, fallbackDecisionModel);
     const nearbyData = await fetchJson(state.config.nearbyCitiesUrl, { cities: [] });
     state.nearbyCities = nearbyData.cities || [];
     initMap();
+    renderDecisionUi();
     bindEvents();
     await Promise.all([loadLiveAirQuality(), loadMailServiceStatus(), loadAiServiceStatus()]);
     updateEnvironmentalUi();
     state.reportContext = null;
-    loadCategory("places");
+    await loadCategory("places");
+    loadSensitiveSiteEvidence();
   }
 
   document.addEventListener("DOMContentLoaded", init);

@@ -11,7 +11,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="">
-  <link rel="stylesheet" href="v2.css?v=20260808-5">
+  <link rel="stylesheet" href="v2.css?v=20260808-6">
 </head>
 <body>
   <a class="skip-link" href="#map">Skip to map</a>
@@ -21,6 +21,7 @@
       <span class="identity-mark" aria-hidden="true"><i></i><b></b></span>
       <span><strong>AeroChem</strong><small>SENTINEL</small></span>
     </a>
+    <span class="prototype-stamp">IDEATHON PROTOTYPE</span>
 
     <nav class="mode-nav" aria-label="Workspace modes">
       <button class="active" type="button" data-mode="situation"><span>01</span> <b data-i18n="navSituation">Situation</b></button>
@@ -92,6 +93,7 @@
       <button type="button" data-layer="transport"><i>⇄</i><span>Transport</span><small>OSM</small></button>
       <button type="button" data-layer="boundary"><i>⬡</i><span>Taluka boundary</span><small>OSM</small></button>
       <button type="button" data-layer="coverage"><i>◌</i><span>Monitoring coverage</span><small>GROUND</small></button>
+      <button class="decision-layer" type="button" data-layer="sensor"><i>◇</i><span>Best sensor site</span><small>PLAN</small></button>
       <button class="demo-layer" type="button" data-layer="demo" hidden><i>◉</i><span>Demo AQI</span><small>MODEL DEMO</small></button>
     </section>
 
@@ -110,6 +112,14 @@
           <div class="comparison-side predicted"><span>LIVE MODEL AQI</span><strong id="predicted-aqi">···</strong><small id="predicted-source">CAMS global model · not observed</small></div>
         </div>
         <div class="snapshot-meta"><div><span>MODEL DATE</span><strong id="model-date">Connecting…</strong></div><div><span>DATA STATUS</span><strong id="snapshot-status">LIVE MODEL</strong></div></div>
+        <section class="decision-module sensor-decision" aria-labelledby="sensor-decision-title">
+          <div class="decision-module-head"><div><span class="section-label">NEXT BEST ACTION · PLANNING</span><h3 id="sensor-decision-title">Recommended first sensor site</h3></div><strong class="decision-score" id="sensor-score">—</strong></div>
+          <p class="decision-description" id="sensor-description">Loading the transparent sensor-siting model…</p>
+          <div class="decision-place"><span>RECOMMENDED</span><strong id="sensor-site-name">Calculating…</strong><small id="sensor-site-reason">Sensitive-site reach, source proximity, access and monitoring gap.</small></div>
+          <div class="decision-metrics"><div><span>Planning radius</span><strong id="sensor-radius">—</strong></div><div><span>Sensitive sites</span><strong id="sensor-sensitive-sites">Checking OSM…</strong></div><div><span>Evidence status</span><strong>SCENARIO</strong></div></div>
+          <div class="decision-actions"><button type="button" id="show-sensor-site">Show recommendation</button><button type="button" id="compare-sensor-sites">Compare candidates</button></div>
+          <details class="calculation-details"><summary>How was this calculated?</summary><p>The score is a documented planning heuristic—not a measured pollution result.</p><div id="sensor-weights"></div><div class="candidate-list" id="sensor-candidates" hidden></div></details>
+        </section>
         <div class="evidence-section"><div class="section-row"><div><span class="section-label">PREDICTION INTERVAL</span><h3>Confidence evidence</h3></div><span class="missing-chip">UNAVAILABLE</span></div><div class="confidence-empty"><span>—</span><p><strong>No validated interval</strong>A confidence percentage is intentionally withheld until calibrated model evidence is connected.</p></div></div>
         <div class="evidence-section"><div class="section-row"><div><span class="section-label">MONITORING COVERAGE</span><h3>Ground-station reach</h3></div><button class="small-map-action" type="button" data-enable-layer="coverage">Show on map</button></div><div class="coverage-empty"><div class="coverage-radar"><i></i><i></i><span>?</span></div><p><strong>Station inventory unavailable</strong>Connect verified station coordinates to reveal measured coverage and remaining spatial gaps.</p></div></div>
         <div class="model-evidence-mini"><div><span>MAE</span><strong>—</strong></div><div><span>RMSE</span><strong>—</strong></div><div><span>R²</span><strong>—</strong></div></div>
@@ -133,7 +143,17 @@
       </div>
 
       <div class="inspector-body mode-panel" id="trends-panel" hidden>
-        <span class="section-label">TEMPORAL EXPLORER · DEMO</span>
+        <section class="decision-module intervention-module" aria-labelledby="intervention-title">
+          <div class="decision-module-head"><div><span class="section-label">DECIDE · PLANNING SANDBOX</span><h3 id="intervention-title">Pollution-reduction simulation</h3></div><span class="scenario-chip">NOT A FORECAST</span></div>
+          <p class="decision-description" id="intervention-description">Compare one intervention against the current modeled particulate values.</p>
+          <div class="intervention-switch" id="intervention-switch"></div>
+          <div class="strength-control"><label for="intervention-strength"><span>Implementation strength</span><strong id="intervention-strength-label">60%</strong></label><input id="intervention-strength" type="range" min="10" max="100" step="10" value="60"></div>
+          <div class="simulation-readout"><div><span>Current model PM₂.₅</span><strong id="simulation-baseline">—</strong></div><div><span>Scenario PM₂.₅</span><strong id="simulation-result">—</strong></div><div class="positive"><span>Illustrative change</span><strong id="simulation-change">—</strong></div></div>
+          <p class="simulation-copy"><strong id="simulation-action">Loading action…</strong><span id="simulation-implementation">Planning scenario only.</span></p>
+          <button class="simulation-map-action" type="button" id="show-simulation-map">Show intervention area on map</button>
+          <details class="calculation-details"><summary>How was this calculated?</summary><p id="simulation-method">The selected assumption is scaled by implementation strength and applied to the current modeled PM value. It is not a causal forecast.</p></details>
+        </section>
+        <span class="section-label analysis-kicker">TEMPORAL EVIDENCE</span>
         <div class="compare-hero"><strong>24 h</strong><p id="trend-source-label">Connecting live model timeline</p><span id="trend-status-label">LOADING</span></div>
         <div class="analysis-switch"><button class="active" type="button" data-compare-state="before">Before · −24 h</button><button type="button" data-compare-state="after">After · selected</button></div>
         <div class="mini-chart"><svg id="compare-chart" viewBox="0 0 340 150" role="img" aria-label="Demo AQI timeline"></svg></div>
@@ -155,6 +175,15 @@
           <button type="button" data-step="4"><span>05</span><i>→</i><div><strong>Act</strong><small>Communicate risk and next steps</small></div></button>
         </div>
         <div class="method-explanation" id="method-explanation"><strong>Observe the environmental system</strong><p>Start with dated, quality-filtered inputs. Satellite column values remain distinct from ground-level concentrations.</p></div>
+        <section class="decision-module feasibility-module" aria-labelledby="feasibility-title">
+          <div class="decision-module-head"><div><span class="section-label">FEASIBILITY + COMMUNITY IMPACT</span><h3 id="feasibility-title">12-week field pilot</h3></div><span class="scenario-chip">EDITABLE PLAN</span></div>
+          <p class="decision-description" id="feasibility-description">Open-source dashboard plus one calibrated sensor at the recommended site.</p>
+          <div class="budget-control"><label for="pilot-sensor-count"><span>Pilot sensors</span><strong id="pilot-sensor-count-label">1</strong></label><input id="pilot-sensor-count" type="range" min="1" max="5" value="1"></div>
+          <div class="feasibility-hero"><span>YEAR-1 PLANNING BUDGET</span><strong id="pilot-budget">—</strong><small>Adjustable assumption · not a vendor quote</small></div>
+          <div class="impact-grid" id="community-impact"></div>
+          <div class="pilot-phases" id="pilot-phases"></div>
+          <details class="calculation-details"><summary>Cost assumptions and evidence</summary><div class="cost-breakdown" id="cost-breakdown"></div><div class="decision-sources" id="decision-sources"></div></details>
+        </section>
       </div>
 
       <div class="location-detail" id="location-detail" hidden>
@@ -227,6 +256,6 @@
   </dialog>
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
-  <script src="v2.js?v=20260808-6"></script>
+  <script src="v2.js?v=20260808-9"></script>
 </body>
 </html>

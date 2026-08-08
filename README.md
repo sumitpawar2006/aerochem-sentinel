@@ -30,6 +30,9 @@ Use `server.py`, not `python -m http.server`: the included server supplies the l
 - Full-screen Leaflet map with real Esri satellite imagery as the default, plus OpenStreetMap streets and OpenTopoMap terrain
 - Live modeled US AQI, PM2.5, PM10, and a 24-hour CAMS model timeline
 - Real OpenStreetMap places, hospitals, education, industry, transport, nearby-city autocomplete, global India search, and Malegaon Taluka boundary
+- Transparent first-sensor recommendation with four candidate sites, a weighted score, a 3 km planning radius, and a live OpenStreetMap sensitive-site count
+- Pollution-reduction sandbox for traffic, industrial housekeeping, and open-burning response assumptions
+- Adjustable 12-week field-pilot plan with year-one cost assumptions and measurable community-impact targets
 - Four work areas: Situation, Investigate, Trends, and Method
 - Observed-versus-modeled comparison, monitoring coverage state, confidence/validation evidence state
 - Clearly labeled demo hotspots when no local sensor or ground-station dataset is available
@@ -39,7 +42,7 @@ Use `server.py`, not `python -m http.server`: the included server supplies the l
 - Sentinel AI for general web-aware questions, typo-tolerant multilingual chat, evidence summaries, reports, and Gmail delivery
 - Desktop, tablet, and mobile layouts
 
-## Automatic Gmail report delivery
+## One-click Gmail report delivery
 
 On Windows, create a Google App Password at https://myaccount.google.com/apppasswords and run the one-time setup:
 
@@ -47,7 +50,7 @@ On Windows, create a Google App Password at https://myaccount.google.com/apppass
 .\setup-gmail.ps1
 ```
 
-The script prompts securely for the Gmail address and 16-character App Password, encrypts the credential for the current Windows user, starts the correct Python server on an available local port, and opens the app. The recipient input then disappears and **Send formatted report now** delivers the HTML email and one-page attachment directly to the configured address.
+The script prompts securely for the Gmail address and 16-character App Password, encrypts the credential for the current Windows user, starts the correct Python server on an available local port, and opens the app. The recipient input then disappears and **Send formatted report now** delivers the HTML email and one-page attachment directly to the configured address. Reports send only after a click or an explicit assistant request; there are no cron jobs or scheduled emails.
 
 For Linux or a hosted Python deployment, use environment variables instead:
 
@@ -77,6 +80,7 @@ The key is entered in a hidden prompt and encrypted for the current Windows user
 - Live values are CAMS model estimates, not readings from a device or monitoring station.
 - Real places on the map do not receive invented AQI values.
 - Demo hotspot values are opt-in and visibly marked `MODEL DEMO`.
+- The sensor score is a planning heuristic, intervention reductions are illustrative scenarios, and costs are editable assumptions rather than forecasts or vendor quotes.
 - Confidence intervals, MAE, RMSE, and R² remain unavailable until validated model artifacts are connected.
 - Satellite basemap imagery is real reference imagery, not a Sentinel-5P pollutant raster.
 - Add production pollutant tile URLs and verified ground-station coordinates through `data/app-config.json` and the data contract in the Method panel.
@@ -85,10 +89,11 @@ The key is entered in a hidden prompt and encrypted for the current Windows user
 
 - `index.html` — application shell
 - `v2.css` — complete responsive visual system
-- `v2.js` — map, live data, interactions, reports, and assistant
+- `v2.js` — map, live data, decision tools, reports, and assistant
 - `server.py` — static server, live-AQI proxy, and Gmail endpoint
 - `setup-gmail.ps1` — one-time encrypted Windows Gmail setup and launcher
 - `setup-ai.ps1` — one-time encrypted Windows OpenAI setup
 - `data/app-config.json` — region and integration configuration
+- `data/decision-model.json` — sensor siting, intervention, cost, and community-impact assumptions
 - `data/nearby-cities.json` — real OpenStreetMap city/town autocomplete catalogue
 - `data/environmental-snapshot.json` — labeled fallback/demo scenario data

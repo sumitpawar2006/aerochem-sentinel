@@ -1,0 +1,98 @@
+{
+  "metadata": {
+    "status": "planning_scenario",
+    "label": "Ideathon decision model",
+    "updated": "2026-08-08",
+    "disclaimer": "Planning recommendations and intervention effects are transparent scenarios, not measured outcomes, official forecasts, or vendor quotations.",
+    "sources": [
+      {"label": "OpenStreetMap", "url": "https://www.openstreetmap.org/copyright", "use": "Mapped roads, places and sensitive-site context"},
+      {"label": "Open-Meteo / CAMS", "url": "https://open-meteo.com/en/docs/air-quality-api", "use": "Current modeled atmospheric conditions"},
+      {"label": "WHO Air Quality Guidelines", "url": "https://www.who.int/news-room/questions-and-answers/item/who-global-air-quality-guidelines", "use": "Health-oriented pollutant context"},
+      {"label": "CPCB National AQI", "url": "https://cpcb.nic.in/National-Air-Quality-Index/", "use": "Indian monitoring and AQI reference pathway"}
+    ]
+  },
+  "sensorSiting": {
+    "title": "Recommended first monitoring site",
+    "description": "Prioritizes a practical first sensor location using sensitive-site access, emission-source proximity, field access and the current monitoring gap.",
+    "coverageRadiusKm": 3,
+    "weights": [
+      {"key": "sensitive", "label": "Sensitive-site reach", "weight": 30},
+      {"key": "source", "label": "Emission-source proximity", "weight": 25},
+      {"key": "access", "label": "Installation and access", "weight": 25},
+      {"key": "gap", "label": "Monitoring coverage gap", "weight": 20}
+    ],
+    "candidates": [
+      {
+        "id": "central-civic",
+        "name": "Central Malegaon civic zone",
+        "lat": 20.5576062,
+        "lng": 74.5246514,
+        "score": 87,
+        "factorScores": {"sensitive": 92, "source": 70, "access": 96, "gap": 88},
+        "reason": "Best balance of public access, central coverage and proximity to schools, health facilities and mixed urban activity."
+      },
+      {
+        "id": "eastern-industrial",
+        "name": "Eastern industrial edge",
+        "lat": 20.5482,
+        "lng": 74.5358,
+        "score": 82,
+        "factorScores": {"sensitive": 72, "source": 96, "access": 74, "gap": 91},
+        "reason": "Strong source-proximity signal, but a less balanced community-coverage and access profile."
+      },
+      {
+        "id": "western-corridor",
+        "name": "Western traffic corridor",
+        "lat": 20.5716,
+        "lng": 74.5015,
+        "score": 81,
+        "factorScores": {"sensitive": 78, "source": 85, "access": 76, "gap": 88},
+        "reason": "Useful traffic exposure context with weaker city-wide representativeness than the central site."
+      },
+      {
+        "id": "southern-edge",
+        "name": "Southern residential edge",
+        "lat": 20.5368,
+        "lng": 74.4967,
+        "score": 73,
+        "factorScores": {"sensitive": 70, "source": 60, "access": 74, "gap": 90},
+        "reason": "Closes a spatial gap but captures fewer mixed-source and sensitive-site conditions."
+      }
+    ]
+  },
+  "interventions": {
+    "title": "Pollution-reduction sandbox",
+    "description": "Applies adjustable, illustrative reductions to the current modeled PM values so participants can compare interventions without claiming a forecast.",
+    "defaultIntervention": "traffic",
+    "defaultStrength": 60,
+    "options": [
+      {"id": "traffic", "name": "Traffic-idling control", "short": "Traffic", "description": "Enforcement and routing near congested corridors during peak periods.", "maxPm25ReductionPct": 12, "maxPm10ReductionPct": 8, "implementation": "8-week corridor pilot"},
+      {"id": "industry", "name": "Industrial housekeeping", "short": "Industry", "description": "Dust control, stack-maintenance checks and cleaner fuel adoption support.", "maxPm25ReductionPct": 18, "maxPm10ReductionPct": 14, "implementation": "12-week cluster pilot"},
+      {"id": "waste", "name": "Open-burning response", "short": "Waste", "description": "Hotspot reporting, collection coordination and targeted enforcement.", "maxPm25ReductionPct": 15, "maxPm10ReductionPct": 10, "implementation": "6-week ward pilot"}
+    ]
+  },
+  "feasibility": {
+    "title": "12-week field pilot",
+    "description": "A phased first deployment that keeps the dashboard open-source and adds one calibrated field sensor at the recommended site.",
+    "timelineWeeks": 12,
+    "costAssumptionsInr": {
+      "sensorAllowance": 80000,
+      "installationAndCalibration": 45000,
+      "connectivityAndMaintenance": 36000,
+      "communityTraining": 25000,
+      "softwareLicence": 0
+    },
+    "phases": [
+      {"weeks": "1–2", "name": "Validate", "description": "Confirm permissions, candidate site and CPCB-compatible reference pathway."},
+      {"weeks": "3–6", "name": "Deploy", "description": "Install, co-locate for calibration and connect the observed-data contract."},
+      {"weeks": "7–10", "name": "Evaluate", "description": "Publish observed-versus-modeled MAE, RMSE and reliability evidence."},
+      {"weeks": "11–12", "name": "Act", "description": "Run one ward intervention and present a transparent before/after review."}
+    ],
+    "communityImpact": [
+      {"label": "Coverage target", "value": "3 km planning radius"},
+      {"label": "Sensitive sites", "value": "Live OSM count when available"},
+      {"label": "Public access", "value": "English + Marathi briefs"},
+      {"label": "Decision target", "value": "Situation brief in under 5 minutes"}
+    ]
+  }
+}
