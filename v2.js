@@ -199,8 +199,8 @@
     const [latitude, longitude] = state.config.region.center;
     const params = new URLSearchParams({
       latitude: String(latitude), longitude: String(longitude),
-      current: "us_aqi,pm10,pm2_5,nitrogen_dioxide,sulphur_dioxide,ozone,carbon_monoxide",
-      hourly: "us_aqi,pm10,pm2_5,nitrogen_dioxide,ozone",
+      current: "us_aqi,pm10,pm2_5,nitrogen_dioxide,formaldehyde,sulphur_dioxide,ozone,carbon_monoxide",
+      hourly: "us_aqi,pm10,pm2_5,nitrogen_dioxide,formaldehyde,ozone",
       past_hours: "24", forecast_hours: "1", timezone: "Asia/Kolkata",
       domains: settings.domain || "cams_global"
     });
@@ -230,6 +230,7 @@
         pm2_5: payload.hourly.pm2_5?.[index],
         pm10: payload.hourly.pm10?.[index],
         no2: payload.hourly.nitrogen_dioxide?.[index],
+        hcho: payload.hourly.formaldehyde?.[index],
         ozone: payload.hourly.ozone?.[index]
       })).filter(item => Number.isFinite(item.aqi));
       state.environmental.predicted = {
@@ -273,6 +274,8 @@
     $("#live-feed-dot").classList.add("ready");
     $("#live-feed-status").textContent = "CAMS / OPEN-METEO";
     $("#live-aqi-scale").textContent = "US AQI · MODEL";
+    $("#live-hcho").textContent = Number.isFinite(current.formaldehyde) ? Number(current.formaldehyde).toFixed(1) : "—";
+    $("#live-no2").textContent = Number.isFinite(current.nitrogen_dioxide) ? Number(current.nitrogen_dioxide).toFixed(1) : "—";
     updateHealthAdvisory(current.us_aqi);
     updateInterventionSimulation();
   }
@@ -1075,7 +1078,7 @@
     const intervention = state.decisionModel.interventions?.options?.find(item => item.id === state.activeIntervention);
     return {
       title: "AeroChem Sentinel — Malegaon Situation Report",
-      summary: state.liveAir ? "The real geospatial basemap and a current CAMS global air-quality model feed are online. This is modeled atmospheric data, not a ground-sensor observation; reliability and satellite pollutant rasters remain unavailable." : "The real geospatial basemap is online. The live air-quality model is unavailable; demonstration outputs remain separately labelled.",
+      summary: state.liveAir ? "The real geospatial basemap and a current CAMS global air-quality model feed are online, including near-surface formaldehyde and nitrogen dioxide context. This is modeled atmospheric data, not a ground-sensor observation or Sentinel-5P column product; reliability and satellite pollutant rasters remain unavailable." : "The real geospatial basemap is online. The live air-quality model is unavailable; demonstration outputs remain separately labelled.",
       generatedAt,
       status: "MIXED DATA AVAILABILITY",
       facts: [
@@ -1083,6 +1086,7 @@
         { label: "Base geography", value: "OpenStreetMap · available" },
         { label: "Observed AQI", value: state.environmental.observed?.aqi ?? "Unavailable" },
         { label: "Predicted AQI", value: state.environmental.predicted?.aqi != null ? `${state.environmental.predicted.aqi} ${state.environmental.predicted.scale || "AQI"} · ${state.environmental.predicted.status === "live_model" ? "LIVE MODEL" : "DEMO"}` : "Unavailable" },
+        { label: "Modeled HCHO / NO₂", value: state.liveAir ? `${state.liveAir.current.formaldehyde ?? "—"} / ${state.liveAir.current.nitrogen_dioxide ?? "—"} µg/m³ · CAMS near-surface model` : "Unavailable" },
         { label: "Current meteorology", value: state.liveWeather ? `${state.liveWeather.temperature_2m}°C · ${state.liveWeather.relative_humidity_2m}% RH · ${state.liveWeather.wind_speed_10m} km/h ${compassDirection(state.liveWeather.wind_direction_10m)}` : "Unavailable" },
         { label: "HCHO / NO₂ satellite workflow", value: "Documented in team PDFs · pollutant raster not connected" },
         { label: "RF / XGBoost model", value: "Design documented · trained artifact and validation metrics not connected" },
@@ -1227,6 +1231,8 @@
       language: state.language,
       visibleBasemap: $("[data-base].active")?.dataset.base || "satellite",
       liveModelAqi: state.liveAir?.current?.us_aqi ?? null,
+      liveModelHchoUgM3: state.liveAir?.current?.formaldehyde ?? null,
+      liveModelNo2UgM3: state.liveAir?.current?.nitrogen_dioxide ?? null,
       liveModelTime: state.liveAir?.current?.time ?? null,
       selectedLocation: state.selectedLocation ? { name: state.selectedLocation.name, type: state.selectedLocation.type, lat: state.selectedLocation.lat, lng: state.selectedLocation.lng } : null,
       selectedHotspot: state.selectedHotspot ? { name: state.selectedHotspot.name, status: "demo" } : null,

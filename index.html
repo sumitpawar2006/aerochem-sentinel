@@ -21,7 +21,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="">
-  <link rel="stylesheet" href="v2.css?v=20260808-10">
+  <link rel="stylesheet" href="v2.css?v=20260808-12">
 </head>
 <body>
   <a class="skip-link" href="#map">Skip to map</a>
@@ -139,6 +139,11 @@
           <div><span>Wind</span><strong id="weather-wind">—</strong></div>
           <div><span>Direction</span><strong id="weather-direction">—</strong></div>
         </div>
+        <section class="live-pollutant-evidence" aria-labelledby="live-pollutant-title">
+          <div class="live-pollutant-head"><div><span class="section-label">CURRENT CAMS POLLUTANT CONTEXT</span><h3 id="live-pollutant-title">Modeled HCHO and NO₂</h3></div><span>LIVE MODEL</span></div>
+          <div class="live-pollutant-values"><div><span>Formaldehyde · CH₂O/HCHO</span><strong id="live-hcho">—</strong><small>µg/m³ · near-surface model</small></div><div><span>Nitrogen dioxide · NO₂</span><strong id="live-no2">—</strong><small>µg/m³ · near-surface model</small></div></div>
+          <p>This is CAMS global model output via Open-Meteo—not a Sentinel-5P column product, sensor reading or confirmed local source.</p>
+        </section>
         <section class="health-advisory" aria-labelledby="health-advisory-title">
           <div><span class="section-label">LIVE MODEL HEALTH CONTEXT</span><strong id="health-band">CONNECTING</strong></div>
           <h3 id="health-advisory-title">Current activity guidance</h3>
@@ -327,7 +332,7 @@
         <span>WHAT JUDGES CAN VERIFY</span>
         <h3 id="judge-proof-title">Evidence, decision and delivery</h3>
         <ul>
-          <li><em>LIVE</em><p><strong>Real geography and current context</strong>Esri satellite, OpenStreetMap, CAMS modeled AQI and Open-Meteo weather.</p></li>
+          <li><em>LIVE</em><p><strong>Real geography and current context</strong>Esri satellite, OpenStreetMap, CAMS modeled AQI, HCHO and NO₂, plus Open-Meteo weather.</p></li>
           <li><em>DECIDE</em><p><strong>A transparent first action</strong>Sensor-siting score, candidate comparison and pollution-reduction sandbox.</p></li>
           <li><em>PILOT</em><p><strong>A feasible validation path</strong>One calibrated sensor, 12 weeks, editable ₹1.86 lakh planning budget.</p></li>
           <li><em>HONEST</em><p><strong>No invented proof</strong>HCHO raster, ground observations and ML metrics remain visibly marked as not connected.</p></li>
@@ -335,6 +340,15 @@
         <button type="button" id="judge-backup-demo">Run labelled backup demo</button>
       </section>
     </div>
+
+    <section class="judge-downloads" aria-labelledby="judge-downloads-title">
+      <div class="judge-section-heading"><span>TEAM TAKEAWAY PACK</span><h3 id="judge-downloads-title">Present live. Keep an offline fallback.</h3></div>
+      <div class="judge-download-grid">
+        <a href="downloads/AeroChem_Sentinel_Ideathon_Pitch_2026.pptx" download><em>01</em><span><strong>Six-slide pitch deck</strong><small>Editable PowerPoint with presenter notes · PPTX</small></span></a>
+        <a href="downloads/AeroChem_Sentinel_Field_Validation_Pack.docx" download><em>02</em><span><strong>Field + judge pack</strong><small>Interviews, BOM, validation, roles and Q&amp;A · DOCX</small></span></a>
+        <a href="downloads/AeroChem_Sentinel_90s_Backup_Demo.mp4" download><em>03</em><span><strong>90-second backup demo</strong><small>Offline copy of the checked six-slide evidence path · MP4</small></span></a>
+      </div>
+    </section>
 
     <section class="judge-pitch" aria-labelledby="judge-pitch-title">
       <div class="judge-section-heading"><span>90-SECOND RUN OF SHOW</span><h3 id="judge-pitch-title">Five moments. One decision story.</h3></div>
@@ -358,6 +372,6 @@
   </dialog>
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
-  <script src="v2.js?v=20260808-13"></script>
+  <script src="v2.js?v=20260808-14"></script>
 </body>
 </html>

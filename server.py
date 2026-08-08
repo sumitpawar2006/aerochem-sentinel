@@ -244,13 +244,13 @@ class AeroChemHandler(SimpleHTTPRequestHandler):
             upstream = (
                 "https://air-quality-api.open-meteo.com/v1/air-quality?"
                 "latitude=20.5576062&longitude=74.5246514&"
-                "current=us_aqi,pm10,pm2_5,nitrogen_dioxide,sulphur_dioxide,ozone,carbon_monoxide&"
-                "hourly=us_aqi,pm10,pm2_5,nitrogen_dioxide,ozone&past_hours=24&forecast_hours=1&"
+                "current=us_aqi,pm10,pm2_5,nitrogen_dioxide,formaldehyde,sulphur_dioxide,ozone,carbon_monoxide&"
+                "hourly=us_aqi,pm10,pm2_5,nitrogen_dioxide,formaldehyde,ozone&past_hours=24&forecast_hours=1&"
                 "timezone=Asia%2FKolkata&domains=cams_global"
             )
             request = urllib.request.Request(upstream, headers={"User-Agent": "AeroChem-Sentinel/2.0"})
             try:
-                with urllib.request.urlopen(request, timeout=15) as response:
+                with urllib.request.urlopen(request, timeout=30) as response:
                     payload = json.loads(response.read().decode("utf-8"))
             except (OSError, urllib.error.URLError, json.JSONDecodeError) as exc:
                 self.log_error("Live AQ proxy failed: %s", exc)

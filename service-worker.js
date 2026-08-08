@@ -1,5 +1,5 @@
-const SHELL_CACHE = "aerochem-shell-v1";
-const RUNTIME_CACHE = "aerochem-runtime-v1";
+const SHELL_CACHE = "aerochem-shell-v2";
+const RUNTIME_CACHE = "aerochem-runtime-v2";
 
 const SHELL_ASSETS = [
   "./",

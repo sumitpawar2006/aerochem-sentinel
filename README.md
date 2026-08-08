@@ -34,7 +34,7 @@ Use `server.py`, not `python -m http.server`: the included server supplies the l
 ## What is included
 
 - Full-screen Leaflet map with real Esri satellite imagery as the default, plus OpenStreetMap streets and OpenTopoMap terrain
-- Live modeled US AQI, PM2.5, PM10, a 24-hour CAMS model timeline, and current Open-Meteo temperature, humidity and wind
+- Live modeled US AQI, PM2.5, PM10, near-surface HCHO and NO2, a 24-hour CAMS model timeline, and current Open-Meteo temperature, humidity and wind
 - Real OpenStreetMap places, hospitals, education, industry, transport, nearby-city autocomplete, global India search, and Malegaon Taluka boundary
 - Transparent first-sensor recommendation with four candidate sites, a weighted score, a 3 km planning radius, and a live OpenStreetMap sensitive-site count
 - Pollution-reduction sandbox for traffic, industrial housekeeping, and open-burning response assumptions
@@ -49,7 +49,7 @@ Use `server.py`, not `python -m http.server`: the included server supplies the l
 - English/Marathi navigation support and an integrated presentation mode
 - Project-evidence assistant on the public site, with optional server-powered general AI and Gmail delivery
 - Mobile-first map view with four thumb-friendly workspace tabs, a compact live-AQI card, and full-height evidence sheets
-- Participant Judge Kit with a public-link QR code, 90-second run of show, difficult-question answers, and a labelled backup-demo control
+- Participant Judge Kit with a public-link QR code, 90-second run of show, difficult-question answers, downloadable six-slide deck, printable field/validation pack, and 90-second offline MP4
 - Installable web-app manifest and cached local shell for a safer repeat demo after the first online visit
 - Desktop and tablet layouts
 
