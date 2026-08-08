@@ -220,6 +220,15 @@ class AeroChemHandler(SimpleHTTPRequestHandler):
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         super().__init__(*args, directory=str(APP_DIR), **kwargs)
 
+    def end_headers(self) -> None:
+        """Prevent stale local HTML/JS/CSS after an application update."""
+        path = urlparse(self.path).path
+        if not path.startswith("/api/") and (path in {"", "/"} or Path(path).suffix in {".html", ".js", ".css"}):
+            self.send_header("Cache-Control", "no-store, no-cache, must-revalidate, max-age=0")
+            self.send_header("Pragma", "no-cache")
+            self.send_header("Expires", "0")
+        super().end_headers()
+
     def _json_response(self, status: HTTPStatus, payload: dict[str, Any]) -> None:
         encoded = json.dumps(payload).encode("utf-8")
         self.send_response(status)
