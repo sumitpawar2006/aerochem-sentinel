@@ -49,7 +49,7 @@ Use `server.py`, not `python -m http.server`: the included server supplies the l
 - Downloadable, print-ready one-page HTML reports
 - English/Marathi navigation support and an integrated presentation mode
 - Project-evidence assistant on the public site, with optional server-powered general AI and Gmail delivery
-- Mobile-first map view with four thumb-friendly workspace tabs, a compact live-AQI card, and full-height evidence sheets
+- Focused mobile map view with four thumb-friendly workspace tabs, a compact live-AQI card, one on-demand Layers sheet, a readable timeline, and partial-height evidence panels that preserve map context
 - Participant Judge Kit with a public-link QR code, 90-second run of show, difficult-question answers, downloadable six-slide deck, printable field/validation pack, 90-second offline MP4, and pilot-evidence starter kit
 - A clearly scoped 100% ideathon-submission-readiness panel: the public prototype and judging assets are complete, while field evidence remains an honest 12-week pilot outcome
 - Installable web-app manifest and cached local shell for a safer repeat demo after the first online visit

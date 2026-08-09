@@ -21,7 +21,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="">
-  <link rel="stylesheet" href="v2.css?v=20260809-13">
+  <link rel="stylesheet" href="v2.css?v=20260809-14">
 </head>
 <body>
   <a class="skip-link" href="#map">Skip to map</a>
@@ -79,6 +79,7 @@
         <div><strong>218</strong><span>DEMO AQI</span></div>
         <p><strong>Poor · demonstration</strong>Illustrative model output, not a current measurement.</p>
       </div>
+      <p class="mobile-model-note"><i></i><span>Regional CAMS estimate · not a ground sensor</span></p>
 
       <div class="data-readiness">
         <div><i class="ready"></i><span>Base geography</span><strong>OPENSTREETMAP</strong></div>
@@ -96,7 +97,7 @@
       <button type="button" data-base="terrain"><span class="base-preview terrain"></span>Terrain</button>
     </div>
 
-    <section class="layer-dock" aria-label="Map layers">
+    <section class="layer-dock" id="mobile-map-layers" aria-label="Map layers">
       <span>LAYERS</span>
       <button class="active" type="button" data-layer="places"><i>⌖</i><span>Places</span><small>OSM</small></button>
       <button type="button" data-layer="hospitals"><i>+</i><span>Hospitals</span><small>OSM</small></button>
@@ -109,6 +110,8 @@
       <button class="decision-layer" type="button" data-layer="sensor"><i>◇</i><span>Best sensor site</span><small>PLAN</small></button>
       <button class="demo-layer" type="button" data-layer="demo" hidden><i>◉</i><span>Demo AQI</span><small>MODEL DEMO</small></button>
     </section>
+    <button class="mobile-layer-backdrop" id="mobile-layer-backdrop" type="button" aria-label="Close map layers" hidden></button>
+    <button class="mobile-layer-toggle" id="mobile-layer-toggle" type="button" aria-expanded="false" aria-controls="mobile-map-layers"><span>▦</span><strong>Layers</strong></button>
 
     <aside class="inspector" id="inspector" aria-label="Map intelligence panel">
       <div class="inspector-handle" aria-hidden="true"></div>
@@ -285,10 +288,10 @@
     </section>
 
     <nav class="mobile-mode-nav" aria-label="Mobile workspace modes">
-      <button class="active" type="button" data-mode="situation"><span>01</span><b>Situation</b></button>
-      <button type="button" data-mode="investigate"><span>02</span><b>Investigate</b></button>
-      <button type="button" data-mode="trends"><span>03</span><b>Trends</b></button>
-      <button type="button" data-mode="method"><span>04</span><b>Method</b></button>
+      <button class="active" type="button" data-mode="situation"><span>●</span><b>Situation</b><small>Now</small></button>
+      <button type="button" data-mode="investigate"><span>⌕</span><b>Investigate</b><small>Places</small></button>
+      <button type="button" data-mode="trends"><span>⇄</span><b>Trends</b><small>Compare</small></button>
+      <button type="button" data-mode="method"><span>✓</span><b>Method</b><small>Proof</small></button>
     </nav>
 
     <div class="map-statusbar">
@@ -393,6 +396,6 @@
   </dialog>
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
-  <script src="v2.js?v=20260809-15"></script>
+  <script src="v2.js?v=20260809-16"></script>
 </body>
 </html>

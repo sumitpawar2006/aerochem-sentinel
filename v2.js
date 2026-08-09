@@ -988,8 +988,28 @@
     $$(".inspector-body.mode-panel, .location-detail").forEach(panel => panel.hidden = true);
   }
 
+  function setMobileLayerMenu(open) {
+    const dock = $(".layer-dock");
+    const toggle = $("#mobile-layer-toggle");
+    const backdrop = $("#mobile-layer-backdrop");
+    if (!dock || !toggle || !backdrop) return;
+    const shouldOpen = Boolean(open && window.matchMedia("(max-width: 900px)").matches);
+    dock.classList.toggle("mobile-open", shouldOpen);
+    toggle.setAttribute("aria-expanded", String(shouldOpen));
+    const label = $("strong", toggle);
+    if (label) label.textContent = shouldOpen ? "Choose layer" : "Layers";
+    backdrop.hidden = !shouldOpen;
+    if (!shouldOpen) $(".map-workspace").scrollTop = 0;
+    if (shouldOpen) {
+      $("#inspector").classList.remove("open");
+      $("#assistant-panel").classList.remove("open");
+    }
+  }
+
   function setMode(mode) {
     if (!modeTitles[mode]) return;
+    setMobileLayerMenu(false);
+    if (window.matchMedia("(max-width: 900px)").matches) $("#assistant-panel").classList.remove("open");
     state.currentMode = mode;
     hideInspectorContents();
     $(`#${mode}-panel`).hidden = false;
@@ -1328,6 +1348,8 @@
   }
 
   function openAssistant(showEmail = false) {
+    setMobileLayerMenu(false);
+    if (window.matchMedia("(max-width: 900px)").matches) $("#inspector").classList.remove("open");
     $("#assistant-panel").classList.add("open");
     if (showEmail) $("#email-composer").hidden = false;
   }
@@ -1611,7 +1633,10 @@
       else if (layer === "coverage") toggleCoverage(button);
       else if (layer === "sensor") toggleSensorLayer(button);
       else if (layer === "demo") toggleDemo();
+      if (window.matchMedia("(max-width: 900px)").matches) setMobileLayerMenu(false);
     }));
+    $("#mobile-layer-toggle").addEventListener("click", () => setMobileLayerMenu(!$(".layer-dock").classList.contains("mobile-open")));
+    $("#mobile-layer-backdrop").addEventListener("click", () => setMobileLayerMenu(false));
     $$("[data-enable-layer]").forEach(button => button.addEventListener("click", () => {
       const layerButton = $(`[data-layer="${button.dataset.enableLayer}"]`);
       if (layerButton) layerButton.click();
@@ -1720,7 +1745,7 @@
     $("#presentation-next").addEventListener("click", () => { if (state.presentationIndex < presentationSteps.length - 1) { state.presentationIndex += 1; renderPresentation(); } else setPresentationActive(false); });
 
     document.addEventListener("keydown", event => {
-      if (event.key === "Escape") { $("#search-results").classList.remove("open"); $("#assistant-panel").classList.remove("open"); setPresentationActive(false); }
+      if (event.key === "Escape") { $("#search-results").classList.remove("open"); $("#assistant-panel").classList.remove("open"); setMobileLayerMenu(false); setPresentationActive(false); }
     });
   }
 
