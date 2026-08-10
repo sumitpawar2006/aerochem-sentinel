@@ -7,21 +7,21 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate">
-  <meta name="description" content="AeroChem Sentinel — map-first environmental intelligence for Malegaon.">
+  <meta name="description" content="AeroChem Sentinel — Maharashtra-wide environmental intelligence with a clearly labelled Malegaon field pilot.">
   <meta property="og:type" content="website">
-  <meta property="og:title" content="AeroChem Sentinel · Malegaon Environmental Intelligence">
-  <meta property="og:description" content="Live satellite, modeled AQI, sensor siting and pollution-reduction planning for Malegaon.">
+  <meta property="og:title" content="AeroChem Sentinel · Maharashtra Environmental Intelligence">
+  <meta property="og:description" content="Explore Maharashtra cities and districts with live satellite, modeled AQI and a transparent Malegaon field-pilot plan.">
   <meta property="og:url" content="https://sumitpawar2006.github.io/aerochem-sentinel/">
   <meta name="twitter:card" content="summary">
   <link rel="canonical" href="https://sumitpawar2006.github.io/aerochem-sentinel/">
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" href="icon.svg" type="image/svg+xml">
-  <title>AeroChem Sentinel · Malegaon Map Intelligence</title>
+  <title>AeroChem Sentinel · Maharashtra Map Intelligence</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="">
-  <link rel="stylesheet" href="v2.css?v=20260809-14">
+  <link rel="stylesheet" href="v2.css?v=20260810-16">
 </head>
 <body>
   <a class="skip-link" href="#map">Skip to map</a>
@@ -47,19 +47,19 @@
       <button class="judge-kit-button" id="judge-kit-button" type="button"><span>★</span> Judge Kit</button>
       <button class="present-button" id="present-button" type="button"><span>▶</span> Present</button>
       <button class="region-button" type="button" id="region-button">
-        <span>REGION</span><strong>Malegaon, Nashik</strong><i>⌄</i>
+        <span>STATEWIDE</span><strong>Maharashtra · 36 districts</strong><i>⌄</i>
       </button>
       <button class="mobile-menu" id="mobile-menu" type="button" aria-label="Open workspace menu" aria-expanded="false"><i></i><i></i></button>
     </div>
   </header>
 
   <main class="map-workspace">
-    <div id="map" role="application" aria-label="Real interactive map of Malegaon with selectable OpenStreetMap locations"></div>
+    <div id="map" role="application" aria-label="Real interactive map of Maharashtra with selectable OpenStreetMap cities, districts and local places"></div>
 
     <form class="map-search" id="map-search" role="search">
       <span aria-hidden="true">⌕</span>
-      <label class="sr-only" for="location-query">Search real nearby cities, roads and places</label>
-      <input id="location-query" type="search" placeholder="Search nearby cities, roads or places" autocomplete="off">
+      <label class="sr-only" for="location-query">Search any Maharashtra city, district, road or mapped place</label>
+      <input id="location-query" type="search" placeholder="Search any Maharashtra city, district or place" autocomplete="off">
       <kbd>ENTER</kbd>
       <button type="submit">Search</button>
       <div class="search-results" id="search-results" aria-live="polite"></div>
@@ -67,7 +67,7 @@
 
     <section class="situation-card" aria-labelledby="situation-title">
       <div class="situation-top">
-        <div><span class="eyebrow">CURRENT SITUATION</span><h1 id="situation-title">Malegaon</h1><p>20.5576° N · 74.5247° E</p></div>
+        <div><span class="eyebrow">CURRENT MODEL POINT</span><h1 id="situation-title">Malegaon pilot</h1><p id="situation-coordinates">20.5576° N · 74.5247° E · CAMS model point</p></div>
         <span class="truth-badge">REAL SATELLITE</span>
       </div>
 
@@ -105,7 +105,7 @@
       <button type="button" data-layer="industry"><i>⌂</i><span>Industry</span><small>OSM</small></button>
       <button type="button" data-layer="transport"><i>⇄</i><span>Transport</span><small>OSM</small></button>
       <button class="satellite-data-layer" type="button" data-layer="satellite-no2"><i>◉</i><span>Sentinel-5P NO₂</span><small>NASA · REAL</small></button>
-      <button type="button" data-layer="boundary"><i>⬡</i><span>Taluka boundary</span><small>OSM</small></button>
+      <button type="button" data-layer="boundary"><i>⬡</i><span>Maharashtra boundary</span><small>OSM</small></button>
       <button type="button" data-layer="coverage"><i>◌</i><span>Monitoring coverage</span><small>GROUND</small></button>
       <button class="decision-layer" type="button" data-layer="sensor"><i>◇</i><span>Best sensor site</span><small>PLAN</small></button>
       <button class="demo-layer" type="button" data-layer="demo" hidden><i>◉</i><span>Demo AQI</span><small>MODEL DEMO</small></button>
@@ -377,7 +377,7 @@
     <section class="judge-pitch" aria-labelledby="judge-pitch-title">
       <div class="judge-section-heading"><span>90-SECOND RUN OF SHOW</span><h3 id="judge-pitch-title">Five moments. One decision story.</h3></div>
       <ol>
-        <li><time>00–15s</time><p><strong>Problem</strong>Malegaon needs local pollution evidence, but ground monitoring is spatially limited.</p></li>
+        <li><time>00–15s</time><p><strong>Problem</strong>Maharashtra needs comparable local pollution evidence; this explorer covers the state while Malegaon anchors the field pilot.</p></li>
         <li><time>15–35s</time><p><strong>Live proof</strong>Show the real map, current modeled AQI, weather, timestamp and resolution.</p></li>
         <li><time>35–55s</time><p><strong>Decision</strong>Reveal the recommended first sensor site and explain that its score is a planning heuristic.</p></li>
         <li><time>55–70s</time><p><strong>Action</strong>Test one intervention assumption without calling it a forecast.</p></li>
@@ -391,11 +391,11 @@
       <details><summary>“Is the satellite image your HCHO layer?”</summary><p>No. The imagery is a real geographic basemap. Sentinel-5P HCHO is a separate column-density product and remains marked as not connected until a dated, quality-filtered raster is supplied.</p></details>
       <details><summary>“Why should we trust the recommended sensor location?”</summary><p>It is a transparent planning heuristic using sensitive-site access, source proximity, field access and monitoring gap. The weights and alternatives are visible; field verification is part of weeks 1–2.</p></details>
       <details><summary>“How will you prove the model works?”</summary><p>Co-locate the sensor for calibration, use time-aware and location-aware holdouts, then publish MAE, RMSE, R², residual checks and confidence evidence. Until then, the dashboard intentionally leaves those values blank.</p></details>
-      <details><summary>“Can this scale beyond Malegaon?”</summary><p>Yes—the interface and data contract are reusable. Scaling requires local boundaries, verified ground reference, dated satellite products and recalibrated model evidence for every new region.</p></details>
+      <details><summary>“Does this cover all Maharashtra?”</summary><p>Yes for exploration: all 36 district headquarters, major cities and statewide OpenStreetMap search are available. Live hospitals, schools, industry and transport load around the selected city. Sensor siting and intervention claims remain the clearly labelled Malegaon pilot until local validation is added elsewhere.</p></details>
     </section>
   </dialog>
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
-  <script src="v2.js?v=20260810-19"></script>
+  <script src="v2.js?v=20260810-22"></script>
 </body>
 </html>

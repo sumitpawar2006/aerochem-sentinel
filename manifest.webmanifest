@@ -1,7 +1,7 @@
 {
   "name": "AeroChem Sentinel",
   "short_name": "AeroChem",
-  "description": "Map-first environmental intelligence and monitoring decisions for Malegaon.",
+  "description": "Maharashtra-wide environmental intelligence with a clearly labelled Malegaon field pilot.",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",

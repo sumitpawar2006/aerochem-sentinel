@@ -17,7 +17,7 @@ import smtplib
 import subprocess
 import urllib.error
 import urllib.request
-from urllib.parse import urlparse
+from urllib.parse import parse_qs, urlencode, urlparse
 from email.message import EmailMessage
 from email.utils import formataddr
 from http import HTTPStatus
@@ -241,12 +241,26 @@ class AeroChemHandler(SimpleHTTPRequestHandler):
     def do_GET(self) -> None:  # noqa: N802
         parsed = urlparse(self.path)
         if parsed.path == "/api/live-aqi":
-            upstream = (
-                "https://air-quality-api.open-meteo.com/v1/air-quality?"
-                "latitude=20.5576062&longitude=74.5246514&"
-                "current=us_aqi,pm10,pm2_5,nitrogen_dioxide,formaldehyde,sulphur_dioxide,ozone,carbon_monoxide&"
-                "hourly=us_aqi,pm10,pm2_5,nitrogen_dioxide,formaldehyde,ozone&past_hours=24&forecast_hours=1&"
-                "timezone=Asia%2FKolkata&domains=cams_global"
+            query = parse_qs(parsed.query)
+            try:
+                latitude = float(query.get("latitude", ["20.5576062"])[0])
+                longitude = float(query.get("longitude", ["74.5246514"])[0])
+            except (TypeError, ValueError):
+                latitude, longitude = 20.5576062, 74.5246514
+            if not (15.3 <= latitude <= 22.4 and 72.3 <= longitude <= 81.2):
+                self._json_response(HTTPStatus.BAD_REQUEST, {"ok": False, "error": "Coordinates must be within Maharashtra"})
+                return
+            upstream = "https://air-quality-api.open-meteo.com/v1/air-quality?" + urlencode(
+                {
+                    "latitude": latitude,
+                    "longitude": longitude,
+                    "current": "us_aqi,pm10,pm2_5,nitrogen_dioxide,formaldehyde,sulphur_dioxide,ozone,carbon_monoxide",
+                    "hourly": "us_aqi,pm10,pm2_5,nitrogen_dioxide,formaldehyde,ozone",
+                    "past_hours": 24,
+                    "forecast_hours": 1,
+                    "timezone": "Asia/Kolkata",
+                    "domains": "cams_global",
+                }
             )
             request = urllib.request.Request(upstream, headers={"User-Agent": "AeroChem-Sentinel/2.0"})
             try:

@@ -1,6 +1,6 @@
 # AeroChem Sentinel
 
-A map-first environmental intelligence experience for Malegaon. It works without a physical sensor: current and hourly air-quality estimates come from the Copernicus CAMS global model through Open-Meteo, and the interface labels them as model output rather than observed ground readings.
+A map-first environmental intelligence experience for Maharashtra, with Malegaon retained as the clearly labelled field-pilot and sensor-siting case. It works without a physical sensor: current and hourly air-quality estimates come from the Copernicus CAMS global model through Open-Meteo, and the interface labels them as model output rather than observed ground readings.
 
 **Live application:** https://sumitpawar2006.github.io/aerochem-sentinel/
 
@@ -36,7 +36,7 @@ Use `server.py`, not `python -m http.server`: the included server supplies the l
 - Full-screen Leaflet map with real Esri satellite imagery as the default, plus OpenStreetMap streets and OpenTopoMap terrain
 - Real, dated daily Sentinel-5P/TROPOMI tropospheric NO2 column imagery loaded from the official NASA GIBS WMS, with the date and column-vs-ground distinction shown on the map
 - Live modeled US AQI, PM2.5, PM10, near-surface HCHO and NO2, a 24-hour CAMS model timeline, and current Open-Meteo temperature, humidity and wind
-- Real OpenStreetMap places, hospitals, education, industry, transport, nearby-city autocomplete, global India search, and Malegaon Taluka boundary
+- All 36 Maharashtra district headquarters, major urban centres, statewide OpenStreetMap search, local hospitals, education, industry and transport around the selected city, plus the Maharashtra state boundary
 - Transparent first-sensor recommendation with four candidate sites, a weighted score, a 3 km planning radius, and a live OpenStreetMap sensitive-site count
 - Pollution-reduction sandbox for traffic, industrial housekeeping, and open-burning response assumptions
 - Adjustable 12-week field-pilot plan with year-one cost assumptions and measurable community-impact targets
@@ -111,7 +111,7 @@ The key is entered in a hidden prompt and encrypted for the current Windows user
 - `setup-ai.ps1` — one-time encrypted Windows OpenAI setup
 - `data/app-config.json` — region and integration configuration
 - `data/decision-model.json` — sensor siting, intervention, cost, and community-impact assumptions
-- `data/nearby-cities.json` — real OpenStreetMap city/town autocomplete catalogue
+- `data/nearby-cities.json` — statewide index of all 36 district headquarters and major Maharashtra urban centres
 - `data/environmental-snapshot.json` — labeled fallback/demo scenario data
 - `templates/` — blank interview, validation, quote-comparison, and site-permission evidence templates
 - `downloads/AeroChem_Pilot_Evidence_Starter_Kit.zip` — downloadable bundle of the four pilot-evidence templates

@@ -9,12 +9,15 @@
 
   const fallbackConfig = {
     region: {
-      name: "Malegaon, Nashik, Maharashtra",
-      center: [20.5576062, 74.5246514],
-      zoom: 13,
-      searchViewbox: [74.3091148, 20.8349688, 74.8127559, 20.3442422],
-      osmBoundaryRelation: 10345577
+      name: "Maharashtra, India",
+      center: [19.7515, 75.7139],
+      zoom: 7,
+      bounds: [[15.55, 72.55], [22.15, 80.95]],
+      searchViewbox: [72.55, 22.15, 80.95, 15.55],
+      osmBoundaryRelation: 1950884,
+      districtCount: 36
     },
+    pilot: { name: "Malegaon pilot", center: [20.5576062, 74.5246514], zoom: 13 },
     environmentalDataUrl: "data/environmental-snapshot.json",
     decisionModelUrl: "data/decision-model.json",
     nearbyCitiesUrl: "data/nearby-cities.json",
@@ -91,13 +94,13 @@
   const translations = {
     en: {
       navSituation: "Situation", navInvestigate: "Investigate", navTrends: "Trends", navMethod: "Method",
-      searchPlaceholder: "Search nearby cities, roads or places",
+      searchPlaceholder: "Search any Maharashtra city, district or place",
       demoButton: "Run demo scenario",
       mapOnline: "MAP ONLINE"
     },
     mr: {
       navSituation: "स्थिती", navInvestigate: "तपासा", navTrends: "कल", navMethod: "पद्धत",
-      searchPlaceholder: "जवळची शहरे, रस्ते किंवा ठिकाणे शोधा",
+      searchPlaceholder: "महाराष्ट्रातील शहर, जिल्हा किंवा ठिकाण शोधा",
       demoButton: "डेमो परिस्थिती चालवा",
       mapOnline: "नकाशा ऑनलाइन"
     }
@@ -112,7 +115,7 @@
   ];
 
   const presentationSteps = [
-    ["situation", "01 · Define the gap", "Malegaon needs local evidence. We show the live model honestly and never present it as a ground observation."],
+    ["situation", "01 · Define the gap", "Maharashtra is explorable statewide; Malegaon remains the clearly labelled pilot for sensor siting and field validation."],
     ["situation", "02 · Show what works", "A real dated Sentinel-5P NO₂ column layer, current CAMS modeled AQI/HCHO/NO₂ and live weather establish the evidence available today."],
     ["situation", "03 · Make a decision", "A transparent planning score recommends the strongest first monitoring location—and labels it as a scenario."],
     ["trends", "04 · Test one action", "The sandbox compares a pollution-reduction assumption without pretending that it is a causal forecast."],
@@ -151,6 +154,9 @@
     aiService: { configured: false, model: "local evidence mode" },
     chatHistory: [],
     nearbyCities: [],
+    catalogueCenter: null,
+    catalogueLabel: "Malegaon pilot",
+    catalogueVersion: 0,
     activeIntervention: "traffic",
     sensitiveSiteCount: null,
     pilotEvidence: { community: false, validation: false, partner: false }
@@ -198,10 +204,10 @@
     return { name: "Hazardous", color: "#792a35" };
   }
 
-  async function loadLiveAirQuality() {
+  async function loadLiveAirQuality(center = state.catalogueCenter || state.config.pilot?.center || state.config.region.center) {
     const settings = state.config.liveAirQuality;
     if (!settings?.enabled) return false;
-    const [latitude, longitude] = state.config.region.center;
+    const [latitude, longitude] = center;
     const params = new URLSearchParams({
       latitude: String(latitude), longitude: String(longitude),
       current: "us_aqi,pm10,pm2_5,nitrogen_dioxide,formaldehyde,sulphur_dioxide,ozone,carbon_monoxide",
@@ -313,8 +319,8 @@
     return points[Math.round(value / 45) % 8];
   }
 
-  async function loadLiveWeather() {
-    const [latitude, longitude] = state.config.region.center;
+  async function loadLiveWeather(center = state.catalogueCenter || state.config.pilot?.center || state.config.region.center) {
+    const [latitude, longitude] = center;
     const params = new URLSearchParams({
       latitude: String(latitude),
       longitude: String(longitude),
@@ -346,7 +352,14 @@
       return;
     }
     const { center, zoom } = state.config.region;
-    state.map = L.map("map", { zoomControl: true, preferCanvas: true, minZoom: 8, maxZoom: 19 }).setView(center, zoom);
+    state.map = L.map("map", {
+      zoomControl: true,
+      preferCanvas: true,
+      minZoom: 6,
+      maxZoom: 19,
+      maxBounds: state.config.region.bounds || undefined,
+      maxBoundsViscosity: .35
+    }).setView(center, zoom);
 
     const streets = L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
       maxZoom: 19,
@@ -509,7 +522,7 @@
     if (!option) return;
     const strength = Number($("#intervention-strength")?.value || 60);
     const radius = 2800 + strength * 22;
-    state.simulationLayer = L.circle(state.config.region.center, {
+    state.simulationLayer = L.circle(state.config.pilot?.center || state.config.region.center, {
       radius, color: "#b9d767", weight: 2, dashArray: "8 6", fillColor: "#b9d767", fillOpacity: .12
     }).bindTooltip(`${escapeHtml(option.name)} · planning area only`, { className: "location-tooltip" }).addTo(state.map);
     state.map.fitBounds(state.simulationLayer.getBounds().pad(.12));
@@ -631,9 +644,13 @@
     updateInterventionSimulation();
   }
 
+  function activeCatalogueCenter() {
+    return state.catalogueCenter || state.config.pilot?.center || state.config.region.center;
+  }
+
   function overpassQueryFor(category) {
     const definition = categoryDefinitions[category];
-    return `[out:json][timeout:30];${definition.query(state.config.region.center)}out center tags;`;
+    return `[out:json][timeout:30];${definition.query(activeCatalogueCenter())}out center tags;`;
   }
 
   async function queryOverpassRequest(query, category) {
@@ -673,6 +690,7 @@
 
   function normalizeOsmElements(elements, category) {
     const seen = new Set();
+    const [centerLat, centerLng] = activeCatalogueCenter();
     return elements.map(element => {
       const lat = element.lat ?? element.center?.lat;
       const lng = element.lon ?? element.center?.lon;
@@ -693,18 +711,22 @@
         category,
         lat,
         lng,
-        address: [tags["addr:street"], tags["addr:suburb"], tags["addr:city"]].filter(Boolean).join(", ") || state.config.region.name,
+        address: [tags["addr:street"], tags["addr:suburb"], tags["addr:city"]].filter(Boolean).join(", ") || `${state.catalogueLabel}, Maharashtra, India`,
         osmUrl: `https://www.openstreetmap.org/${element.type}/${element.id}`
       };
-    }).filter(Boolean).sort((a, b) => a.name.localeCompare(b.name));
+    }).filter(Boolean).sort((a, b) => {
+      const distanceDelta = distanceKm(centerLat, centerLng, a.lat, a.lng) - distanceKm(centerLat, centerLng, b.lat, b.lng);
+      return distanceDelta || a.name.localeCompare(b.name);
+    }).slice(0, 200);
   }
 
   function markerIcon(category) {
     const definition = categoryDefinitions[category];
+    const statewide = category === "places";
     return L.divIcon({
       className: "",
-      html: `<span class="real-place-marker ${definition.markerClass}" aria-hidden="true"></span>`,
-      iconSize: [21, 21], iconAnchor: [10, 10]
+      html: `<span class="real-place-marker ${definition.markerClass} ${statewide ? "statewide-place" : ""}" aria-hidden="true"></span>`,
+      iconSize: statewide ? [14, 14] : [21, 21], iconAnchor: statewide ? [7, 7] : [10, 10]
     });
   }
 
@@ -713,14 +735,36 @@
     locations.forEach(location => {
       const marker = L.marker([location.lat, location.lng], { icon: markerIcon(category), keyboard: true })
         .bindTooltip(`<strong>${escapeHtml(location.name)}</strong><br>${escapeHtml(location.type)}`, { className: "location-tooltip", direction: "top", offset: [0, -8] })
-        .on("click", () => inspectLocation(location));
+        .on("click", () => {
+          if (category === "places") setActiveCatalogueLocation(location.lat, location.lng, location.name);
+          inspectLocation(location);
+        });
       marker.addTo(group);
     });
     return group;
   }
 
+  function statewidePlaceLocations() {
+    return state.nearbyCities.map(city => ({
+      id: `mh-${city.id}`,
+      osmType: city.osmType || null,
+      osmId: city.osmId || null,
+      name: city.name,
+      marathiName: city.nameMr || null,
+      type: city.type || "mapped city",
+      category: "places",
+      lat: city.lat,
+      lng: city.lng,
+      address: [city.district, "Maharashtra", "India"].filter(Boolean).join(", "),
+      osmUrl: city.osmType && city.osmId
+        ? `https://www.openstreetmap.org/${city.osmType}/${city.osmId}`
+        : `https://www.openstreetmap.org/?mlat=${city.lat}&mlon=${city.lng}#map=13/${city.lat}/${city.lng}`
+    }));
+  }
+
   function categoryCacheKey(category) {
-    return `aerochem-osm-${category}-v1`;
+    const [lat, lng] = activeCatalogueCenter();
+    return `aerochem-osm-${category}-${lat.toFixed(3)}-${lng.toFixed(3)}-v3`;
   }
 
   function cacheCategory(category, locations) {
@@ -744,6 +788,7 @@
 
   async function loadCategory(category, options = {}) {
     if (!categoryDefinitions[category]) return;
+    const catalogueVersion = state.catalogueVersion;
     state.activeCategory = category;
     const definition = categoryDefinitions[category];
     $("#location-list").innerHTML = Array.from({ length: 6 }, () => '<div class="loading-row"></div>').join("");
@@ -762,11 +807,17 @@
     }
 
     try {
-      if (!state.categoryData[category]) {
-        state.categoryData[category] = await queryOverpass(category);
-        cacheCategory(category, state.categoryData[category]);
+      let locations = state.categoryData[category];
+      if (category === "places" && !locations) {
+        locations = statewidePlaceLocations();
+      } else if (!locations) {
+        locations = await queryOverpass(category);
       }
-      const locations = state.categoryData[category];
+      if (catalogueVersion !== state.catalogueVersion) return;
+      if (!state.categoryData[category]) {
+        state.categoryData[category] = locations;
+        if (category !== "places") cacheCategory(category, locations);
+      }
       if (!state.categoryLayers[category]) state.categoryLayers[category] = createCategoryLayer(category, locations);
       if (state.activeCategory !== category) return;
       Object.entries(state.categoryLayers).forEach(([key, layer]) => {
@@ -776,14 +827,19 @@
       renderLocationList(locations, category);
       $("#location-count").textContent = locations.length;
       $("#catalogue-status").className = "loaded";
-      $("#catalogue-status").innerHTML = "<i></i> Loaded from OpenStreetMap";
-      $("#visible-layer-status").textContent = `${definition.title} · OpenStreetMap`;
+      $("#catalogue-status").innerHTML = category === "places"
+        ? `<i></i> Maharashtra index · ${state.config.region.districtCount || 36} district headquarters`
+        : `<i></i> Loaded near ${escapeHtml(state.catalogueLabel)} · up to 200 nearest OSM results`;
+      $("#visible-layer-status").textContent = category === "places"
+        ? "Maharashtra cities and district headquarters · statewide index"
+        : `${definition.title} near ${state.catalogueLabel} · OpenStreetMap`;
       if (options.fit && locations.length) {
         const bounds = L.latLngBounds(locations.map(item => [item.lat, item.lng]));
         state.map.fitBounds(bounds.pad(.15), { maxZoom: 14 });
       }
     } catch (error) {
       console.warn("Live OpenStreetMap catalogue unavailable", error);
+      if (catalogueVersion !== state.catalogueVersion) return;
       if (state.activeCategory !== category) return;
       const cached = readCachedCategory(category);
       if (cached) {
@@ -821,7 +877,10 @@
     </button>`).join("");
     $$("[data-location-id]", list).forEach(button => button.addEventListener("click", () => {
       const location = locations.find(item => item.id === button.dataset.locationId);
-      if (location) inspectLocation(location);
+      if (location) {
+        if (category === "places") setActiveCatalogueLocation(location.lat, location.lng, location.name);
+        inspectLocation(location);
+      }
     }));
   }
 
@@ -840,7 +899,7 @@
     $("#detail-lng").textContent = location.lng.toFixed(6);
     $("#detail-osm-link").href = location.osmUrl;
     $("#inspector").classList.add("open");
-    state.map.flyTo([location.lat, location.lng], Math.max(state.map.getZoom(), 15), { duration: .65 });
+    state.map.flyTo([location.lat, location.lng], location.category === "places" ? Math.max(state.map.getZoom(), 12) : Math.max(state.map.getZoom(), 15), { duration: .65 });
   }
 
   async function toggleBoundary(button) {
@@ -854,7 +913,7 @@
       button.classList.add("active");
       return;
     }
-    showToast("Loading the real Malegaon Taluka boundary from OpenStreetMap…");
+    showToast("Loading the real Maharashtra state boundary from OpenStreetMap…");
     try {
       const relation = state.config.region.osmBoundaryRelation;
       const response = await fetch(`https://nominatim.openstreetmap.org/lookup?format=jsonv2&osm_ids=R${relation}&polygon_geojson=1`, { headers: { "Accept-Language": state.language === "mr" ? "mr,en" : "en" } });
@@ -862,10 +921,10 @@
       const result = await response.json();
       if (!result[0]?.geojson) throw new Error("Boundary geometry missing");
       state.boundaryLayer = L.geoJSON(result[0].geojson, { style: { color: "#0f7c65", weight: 2, opacity: .85, fillColor: "#0f7c65", fillOpacity: .025, dashArray: "7 7" } })
-        .bindTooltip("Malegaon Taluka boundary · OpenStreetMap", { className: "location-tooltip" })
+        .bindTooltip("Maharashtra state boundary · OpenStreetMap", { className: "location-tooltip" })
         .addTo(state.map);
       button.classList.add("active");
-      showToast("Real Malegaon Taluka boundary loaded.");
+      showToast("Real Maharashtra state boundary loaded.");
     } catch (error) {
       console.error(error);
       showToast("Boundary service unavailable. Try again later.", 4600);
@@ -913,7 +972,7 @@
     const enable = typeof force === "boolean" ? force : !state.demoEnabled;
     state.demoEnabled = enable;
     if (enable) state.demoLayer.addTo(state.map); else state.map.removeLayer(state.demoLayer);
-    if (enable) state.map.flyTo(state.config.region.center, state.config.region.zoom, { duration: .7 });
+    if (enable) state.map.flyTo(state.config.pilot?.center || state.config.region.center, state.config.pilot?.zoom || 13, { duration: .7 });
     $("#aqi-empty").hidden = enable;
     $("#aqi-demo").hidden = !enable;
     $("#demo-legend").hidden = !enable;
@@ -952,41 +1011,67 @@
     return 6371 * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
   }
 
+  function clearLocalCatalogueLayers() {
+    ["hospitals", "schools", "industry", "transport"].forEach(category => {
+      const layer = state.categoryLayers[category];
+      if (layer && state.map.hasLayer(layer)) state.map.removeLayer(layer);
+      delete state.categoryLayers[category];
+      delete state.categoryData[category];
+    });
+  }
+
+  function setActiveCatalogueLocation(lat, lng, name) {
+    if (!Number.isFinite(lat) || !Number.isFinite(lng)) return;
+    state.catalogueVersion += 1;
+    state.catalogueCenter = [lat, lng];
+    state.catalogueLabel = name || "Selected Maharashtra location";
+    clearLocalCatalogueLayers();
+    $("#situation-title").textContent = state.catalogueLabel;
+    const coordinateLabel = $("#situation-coordinates");
+    if (coordinateLabel) coordinateLabel.textContent = `${formatCoordinate(lat, "N", "S")} · ${formatCoordinate(lng, "E", "W")} · CAMS model point`;
+    $("#live-aqi-category").textContent = `Updating ${state.catalogueLabel} model…`;
+    Promise.all([loadLiveAirQuality([lat, lng]), loadLiveWeather([lat, lng])]).then(() => {
+      updateEnvironmentalUi();
+      showToast(`${state.catalogueLabel} selected. Live model and local OpenStreetMap layers now use this area.`, 5000);
+    });
+  }
+
   function suggestNearbyCities(query) {
     const results = $("#search-results");
     const value = query.trim().toLocaleLowerCase(state.language === "mr" ? "mr-IN" : "en-IN");
     if (!value) { results.classList.remove("open"); return; }
-    const [centerLat, centerLng] = state.config.region.center;
+    const [centerLat, centerLng] = activeCatalogueCenter();
     const matches = state.nearbyCities
-      .filter(city => [city.name, city.nameMr].filter(Boolean).some(name => name.toLocaleLowerCase().includes(value)))
+      .filter(city => [city.name, city.nameMr, city.district, ...(city.aliases || [])].filter(Boolean).some(name => name.toLocaleLowerCase().includes(value)))
       .map(city => ({ ...city, distance: distanceKm(centerLat, centerLng, city.lat, city.lng) }))
       .sort((a, b) => {
         const aStarts = a.name.toLowerCase().startsWith(value) ? 0 : 1;
         const bStarts = b.name.toLowerCase().startsWith(value) ? 0 : 1;
-        return aStarts - bStarts || a.distance - b.distance;
+        return aStarts - bStarts || Number(Boolean(b.districtHeadquarter)) - Number(Boolean(a.districtHeadquarter)) || a.distance - b.distance;
       })
-      .slice(0, 7);
+      .slice(0, 9);
     results.classList.add("open");
     if (!matches.length) {
       results.innerHTML = '<p class="search-message">Press Enter to search all real OpenStreetMap locations.</p>';
       return;
     }
-    results.innerHTML = `<div class="search-suggestion-label">NEARBY CITIES · OPENSTREETMAP</div>${matches.map((city, index) => `
+    results.innerHTML = `<div class="search-suggestion-label">MAHARASHTRA CITY & DISTRICT INDEX</div>${matches.map((city, index) => `
       <button class="search-result city-suggestion" type="button" data-city-index="${index}">
         <span>◎</span><div><strong>${escapeHtml(state.language === "mr" && city.nameMr ? city.nameMr : city.name)}</strong>
-        <small>${escapeHtml(city.type)} · ${Math.round(city.distance)} km from Malegaon${city.nameMr && state.language !== "mr" ? ` · ${escapeHtml(city.nameMr)}` : ""}</small></div>
-      </button>`).join("")}<p class="search-message search-all-note">Press Enter to search roads and every mapped place.</p>`;
+        <small>${escapeHtml(city.type)}${city.district ? ` · ${escapeHtml(city.district)} district` : ""}${city.pilot ? " · PILOT" : ""}${city.nameMr && state.language !== "mr" ? ` · ${escapeHtml(city.nameMr)}` : ""}</small></div>
+      </button>`).join("")}<p class="search-message search-all-note">Press Enter to search every mapped Maharashtra road, village and place.</p>`;
     $$('[data-city-index]', results).forEach(button => button.addEventListener("click", () => selectNearbyCity(matches[Number(button.dataset.cityIndex)])));
   }
 
   function selectNearbyCity(city) {
     $("#location-query").value = city.name;
     selectSearchResult({
-      lat: String(city.lat), lon: String(city.lng), osm_type: "node", osm_id: city.id,
+      lat: String(city.lat), lon: String(city.lng), curated_id: city.id,
+      osm_type: city.osmType || null, osm_id: city.osmId || null,
       name: city.name, type: city.type, category: "place",
-      display_name: `${city.name}, nearby city/town, India`
+      display_name: [city.name, city.district, "Maharashtra", "India"].filter(Boolean).join(", ")
     });
-    state.map.flyTo([city.lat, city.lng], city.type === "city" ? 12 : 13, { duration: .8 });
+    state.map.flyTo([city.lat, city.lng], city.districtHeadquarter ? 11 : city.type.includes("city") ? 12 : 13, { duration: .8 });
   }
 
   async function searchLocations(query) {
@@ -994,7 +1079,7 @@
     results.classList.add("open");
     results.innerHTML = '<p class="search-message">Searching OpenStreetMap…</p>';
     const viewbox = state.config.region.searchViewbox.join(",");
-    const url = `https://nominatim.openstreetmap.org/search?format=jsonv2&addressdetails=1&limit=8&bounded=0&countrycodes=in&viewbox=${viewbox}&accept-language=${state.language === "mr" ? "mr,en" : "en"}&q=${encodeURIComponent(query)}`;
+    const url = `https://nominatim.openstreetmap.org/search?format=jsonv2&addressdetails=1&limit=8&bounded=1&countrycodes=in&viewbox=${viewbox}&accept-language=${state.language === "mr" ? "mr,en" : "en"}&q=${encodeURIComponent(query)}`;
     try {
       const response = await fetch(url);
       if (!response.ok) throw new Error(`Search ${response.status}`);
@@ -1016,16 +1101,21 @@
     $("#search-results").classList.remove("open");
     if (state.searchMarker) state.searchMarker.remove();
     state.searchMarker = L.marker([lat, lng], { icon: L.divIcon({ className: "", html: '<span class="search-pin"></span>', iconSize: [34, 42], iconAnchor: [17, 39] }) }).addTo(state.map);
+    const locationName = item.name || item.display_name.split(",")[0];
+    setActiveCatalogueLocation(lat, lng, locationName);
+    const hasOsmObject = Boolean(item.osm_type && item.osm_id);
     const location = {
-      id: `${item.osm_type}-${item.osm_id}`,
+      id: hasOsmObject ? `${item.osm_type}-${item.osm_id}` : `mh-${item.curated_id || `${lat}-${lng}`}`,
       osmType: item.osm_type,
       osmId: item.osm_id,
-      name: item.name || item.display_name.split(",")[0],
+      name: locationName,
       type: item.type || item.category || "mapped location",
       category: "search",
       lat, lng,
       address: item.display_name,
-      osmUrl: `https://www.openstreetmap.org/${item.osm_type}/${item.osm_id}`
+      osmUrl: hasOsmObject
+        ? `https://www.openstreetmap.org/${item.osm_type}/${item.osm_id}`
+        : `https://www.openstreetmap.org/?mlat=${lat}&mlon=${lng}#map=13/${lat}/${lng}`
     };
     inspectLocation(location);
   }
@@ -1183,16 +1273,20 @@
     }
     if (context?.kind === "location") {
       const l = context.data;
+      const [modelLat, modelLng] = activeCatalogueCenter();
+      const hasLocalModel = Boolean(state.liveAir && distanceKm(modelLat, modelLng, l.lat, l.lng) < 1);
       return {
         title: `AeroChem Location Report — ${l.name}`,
-        summary: `${l.name} is a real mapped OpenStreetMap location. No AQI observation or model output is currently connected to this location.`,
+        summary: hasLocalModel
+          ? `${l.name} is a real mapped OpenStreetMap location. Current CAMS / Open-Meteo output is available for this model point; it is not a ground-sensor observation.`
+          : `${l.name} is a real mapped OpenStreetMap location. No AQI observation or model output is currently connected to this exact feature.`,
         generatedAt,
-        status: "REAL LOCATION · ENVIRONMENTAL DATA UNAVAILABLE",
+        status: hasLocalModel ? "REAL LOCATION · LIVE MODEL CONTEXT" : "REAL LOCATION · ENVIRONMENTAL DATA UNAVAILABLE",
         facts: [
           { label: "Location type", value: l.type },
           { label: "Coordinates", value: `${l.lat.toFixed(6)}, ${l.lng.toFixed(6)}` },
           { label: "Map source", value: "OpenStreetMap" },
-          { label: "Environmental data", value: "Not connected" },
+          { label: "Environmental data", value: hasLocalModel ? `CAMS / Open-Meteo · US AQI ${state.liveAir.current.us_aqi} · modeled, not observed` : "Not connected" },
           { label: "Source feature", value: l.osmUrl }
         ]
       };
@@ -1202,12 +1296,13 @@
     const oneSensorBudget = Object.values(feasibilityCosts).reduce((total, value) => total + (Number(value) || 0), 0);
     const intervention = state.decisionModel.interventions?.options?.find(item => item.id === state.activeIntervention);
     return {
-      title: "AeroChem Sentinel — Malegaon Situation Report",
+      title: `AeroChem Sentinel — ${state.catalogueLabel} Situation Report`,
       summary: state.liveAir ? "The real geospatial basemap, a dated Sentinel-5P TROPOMI NO₂ column and a current CAMS global air-quality model feed are online. CAMS formaldehyde and nitrogen dioxide remain modeled near-surface context—not ground-sensor observations or Sentinel-5P column values; the HCHO satellite raster and local validation evidence remain unavailable." : "The real geospatial basemap and dated Sentinel-5P NO₂ layer are online. The live air-quality model is unavailable; demonstration outputs remain separately labelled.",
       generatedAt,
       status: "MIXED DATA AVAILABILITY",
       facts: [
         { label: "Region", value: state.config.region.name },
+        { label: "Current model point", value: `${state.catalogueLabel} · CAMS / Open-Meteo` },
         { label: "Base geography", value: "OpenStreetMap · available" },
         { label: "Observed AQI", value: state.environmental.observed?.aqi ?? "Unavailable" },
         { label: "Predicted AQI", value: state.environmental.predicted?.aqi != null ? `${state.environmental.predicted.aqi} ${state.environmental.predicted.scale || "AQI"} · ${state.environmental.predicted.status === "live_model" ? "LIVE MODEL" : "DEMO"}` : "Unavailable" },
@@ -1354,6 +1449,8 @@
     const activeAction = state.decisionModel.interventions?.options?.find(item => item.id === state.activeIntervention);
     return {
       region: state.config.region.name,
+      currentModelPoint: state.catalogueLabel,
+      pilotRegion: state.config.pilot?.name || "Malegaon pilot",
       language: state.language,
       visibleBasemap: $("[data-base].active")?.dataset.base || "satellite",
       liveModelAqi: state.liveAir?.current?.us_aqi ?? null,
@@ -1479,7 +1576,7 @@
       addAssistantMessage(`The field-pilot plan is open: ${state.decisionModel.feasibility?.timelineWeeks || 12} weeks with an adjustable cost model and explicitly labelled community-impact targets.`);
     } else if (intent.name === "domain") {
       setMode("situation");
-      addAssistantMessage("The team documents make HCHO the project differentiator: a Sentinel-5P column-density signal for investigating VOC-related industrial patterns. No live HCHO raster is connected yet, so the dashboard does not claim a measured Malegaon HCHO hotspot.");
+      addAssistantMessage("The team documents make HCHO the project differentiator: a Sentinel-5P column-density signal for investigating VOC-related industrial patterns. The explorer now covers Maharashtra, while the labelled hotspot and sensor scenarios remain the Malegaon pilot. No live HCHO raster is connected yet.");
     } else if (intent.name === "pipeline") {
       setMode("method");
       addAssistantMessage("The documented pipeline is Sentinel-5P HCHO/NO₂ + meteorology + a verified ground reference → aligned data fusion → Random Forest/XGBoost → MAE, RMSE and R² validation → dashboard. A real dated Sentinel-5P NO₂ column and live meteorology are connected; the HCHO raster, ground dataset, trained model and validation metrics remain pilot work.");
@@ -1702,7 +1799,11 @@
       const open = $(".mode-nav").classList.toggle("open");
       $("#mobile-menu").setAttribute("aria-expanded", String(open));
     });
-    $("#region-button").addEventListener("click", () => { state.map.flyTo(state.config.region.center, state.config.region.zoom, { duration: .7 }); showToast("Malegaon is the only data-enabled region in this build."); });
+    $("#region-button").addEventListener("click", () => {
+      if (state.config.region.bounds) state.map.fitBounds(state.config.region.bounds, { padding: [18, 18], duration: .7 });
+      else state.map.flyTo(state.config.region.center, state.config.region.zoom, { duration: .7 });
+      showToast(`Maharashtra overview · ${state.config.region.districtCount || 36} district headquarters indexed. Select a city for local live layers.`);
+    });
     $("#share-button").addEventListener("click", sharePublicApp);
     $("#judge-kit-button").addEventListener("click", () => $("#judge-dialog").showModal());
     $("#judge-dialog-close").addEventListener("click", () => $("#judge-dialog").close());
@@ -1798,6 +1899,8 @@
 
   async function init() {
     state.config = await fetchJson("data/app-config.json", fallbackConfig);
+    state.catalogueCenter = [...(state.config.pilot?.center || state.config.region.center)];
+    state.catalogueLabel = state.config.pilot?.name || state.config.region.name;
     state.environmental = await fetchJson(state.config.environmentalDataUrl, fallbackEnvironmentalData);
     state.decisionModel = await fetchJson(state.config.decisionModelUrl, fallbackDecisionModel);
     const nearbyData = await fetchJson(state.config.nearbyCitiesUrl, { cities: [] });

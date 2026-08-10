@@ -1,10 +1,17 @@
 {
   "region": {
-    "name": "Malegaon, Nashik, Maharashtra",
+    "name": "Maharashtra, India",
+    "center": [19.7515, 75.7139],
+    "zoom": 7,
+    "bounds": [[15.55, 72.55], [22.15, 80.95]],
+    "searchViewbox": [72.55, 22.15, 80.95, 15.55],
+    "osmBoundaryRelation": 1950884,
+    "districtCount": 36
+  },
+  "pilot": {
+    "name": "Malegaon pilot",
     "center": [20.5576062, 74.5246514],
-    "zoom": 13,
-    "searchViewbox": [74.3091148, 20.8349688, 74.8127559, 20.3442422],
-    "osmBoundaryRelation": 10345577
+    "zoom": 13
   },
   "environmentalDataUrl": "data/environmental-snapshot.json",
   "decisionModelUrl": "data/decision-model.json",
