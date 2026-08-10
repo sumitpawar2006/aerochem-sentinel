@@ -719,6 +719,29 @@
     return group;
   }
 
+  function categoryCacheKey(category) {
+    return `aerochem-osm-${category}-v1`;
+  }
+
+  function cacheCategory(category, locations) {
+    try {
+      localStorage.setItem(categoryCacheKey(category), JSON.stringify({
+        savedAt: new Date().toISOString(),
+        locations
+      }));
+    } catch { /* Private browsing or storage limits must not break the map. */ }
+  }
+
+  function readCachedCategory(category) {
+    try {
+      const cached = JSON.parse(localStorage.getItem(categoryCacheKey(category)) || "null");
+      if (!cached || !Array.isArray(cached.locations) || !cached.locations.length) return null;
+      return cached;
+    } catch {
+      return null;
+    }
+  }
+
   async function loadCategory(category, options = {}) {
     if (!categoryDefinitions[category]) return;
     state.activeCategory = category;
@@ -739,9 +762,13 @@
     }
 
     try {
-      if (!state.categoryData[category]) state.categoryData[category] = await queryOverpass(category);
+      if (!state.categoryData[category]) {
+        state.categoryData[category] = await queryOverpass(category);
+        cacheCategory(category, state.categoryData[category]);
+      }
       const locations = state.categoryData[category];
       if (!state.categoryLayers[category]) state.categoryLayers[category] = createCategoryLayer(category, locations);
+      if (state.activeCategory !== category) return;
       Object.entries(state.categoryLayers).forEach(([key, layer]) => {
         if (key !== category && state.map.hasLayer(layer)) state.map.removeLayer(layer);
       });
@@ -756,7 +783,24 @@
         state.map.fitBounds(bounds.pad(.15), { maxZoom: 14 });
       }
     } catch (error) {
-      console.error(error);
+      console.warn("Live OpenStreetMap catalogue unavailable", error);
+      if (state.activeCategory !== category) return;
+      const cached = readCachedCategory(category);
+      if (cached) {
+        state.categoryData[category] = cached.locations;
+        if (!state.categoryLayers[category]) state.categoryLayers[category] = createCategoryLayer(category, cached.locations);
+        Object.entries(state.categoryLayers).forEach(([key, layer]) => {
+          if (key !== category && state.map.hasLayer(layer)) state.map.removeLayer(layer);
+        });
+        state.categoryLayers[category].addTo(state.map);
+        renderLocationList(cached.locations, category);
+        $("#location-count").textContent = cached.locations.length;
+        $("#catalogue-status").className = "loaded";
+        $("#catalogue-status").innerHTML = `<i></i> Cached OpenStreetMap snapshot · ${new Date(cached.savedAt).toLocaleDateString()}`;
+        $("#visible-layer-status").textContent = `${definition.title} · cached OpenStreetMap snapshot`;
+        showToast("The live feature service is busy. Showing the last successful OpenStreetMap snapshot.", 5200);
+        return;
+      }
       $("#location-count").textContent = "0";
       $("#catalogue-status").className = "error";
       $("#catalogue-status").innerHTML = "<i></i> Live feature service unavailable";
@@ -1764,10 +1808,11 @@
     updateConnectivity(false);
     registerOfflineShell();
     if (window.matchMedia("(min-width: 901px)").matches) $("#inspector").classList.add("open");
+    const initialCategoryLoad = loadCategory("places");
     await Promise.all([loadLiveAirQuality(), loadLiveWeather(), loadMailServiceStatus(), loadAiServiceStatus()]);
     updateEnvironmentalUi();
     state.reportContext = null;
-    await loadCategory("places");
+    await initialCategoryLoad;
     loadSensitiveSiteEvidence();
   }
 
