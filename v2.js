@@ -386,7 +386,7 @@
 
   function latestCompleteSatelliteDate() {
     const date = new Date();
-    date.setDate(date.getDate() - 1);
+    date.setDate(date.getDate() - 2);
     return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
   }
 
@@ -874,7 +874,9 @@
     $("#aqi-demo").hidden = !enable;
     $("#demo-legend").hidden = !enable;
     $("#demo-button").classList.toggle("active", enable);
+    $("#demo-button").hidden = false;
     $("#demo-button strong").textContent = enable ? "Hide demo scenario" : translations[state.language].demoButton;
+    $('[data-layer="demo"]').hidden = false;
     $('[data-layer="demo"]').classList.toggle("active", enable);
     showToast(enable ? "Demo AQI overlay enabled. It is not live environmental data." : "Demo AQI overlay hidden. Real geography remains visible.", 4200);
   }
@@ -1714,6 +1716,7 @@
     $("#compare-sensor-sites").addEventListener("click", () => {
       const list = $("#sensor-candidates");
       list.hidden = !list.hidden;
+      if (!list.hidden) list.closest("details").open = true;
       $("#compare-sensor-sites").textContent = list.hidden ? "Compare candidates" : "Hide comparison";
       showSensorRecommendation(undefined, !list.hidden);
     });
